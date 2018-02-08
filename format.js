@@ -1,7 +1,7 @@
-import {arrayLike, isObject, isFunction, isNumber} from "./type_checks.js";
+import {arrayLike, isObject, isFunction, isNumber, isInteger} from "./type_checks.js";
 import {toArray, own} from "./utils.js";
 
-let format_re = /^((.)?[><=^])?([-+\s])?(#)?(0)?([1-9][0-9]*)?(\.[0-9]*)?(.)?$/g;
+let format_re = /^((.)?([><=^]))?([-+\s])?(#)?(0)?([1-9][0-9]*)?(,)?(\.([0-9]*))?(.)?$/;
 
 export function pad(str, min_length, pad, pad_type) {
     if(str.length >= min_length) return str;
@@ -15,105 +15,74 @@ export function pad(str, min_length, pad, pad_type) {
     return pad.repeat(half) + str + pad.repeat(padlen - half);
 }
 
-let formats = {
-    b: function () {
-        return Number.parseInt(arguments[0]).toString(2);
+let number_formats = {
+    b:(a)=>Number.parseInt(a).toString(2),
+    c:(a)=>String.fromCharCode(a),
+    d:(a)=>Number.parseInt(a).toString(),
+    e:(a,p)=>a.toExponential(p === false ? 6 : p),
+    E:(a,p)=>number_formats.e(a,p).toUpperCase(),
+    f (a,p){
+        let exp = Math.floor(Math.log10(a));
+
+        if(exp>19){
+            exp -= 19;
+            let significand = a/Math.pow(10, exp);
+            return this.f(significand, 0) + '0'.repeat(exp) + (p>0 ? ('.' + '0'.repeat(p)):'');
+        }
+
+        return a.toFixed(p === false ? 6 : p)
     },
-    c: function () {
-        return String.fromCharCode(arguments[0]);
-    },
-    d: function () {
-        return Number.parseInt(arguments[0]).toString()
-    },
-    e: function (arg, precision) {
-        let v = arg.toExponential(precision || 6);
-        let eloc = v.search('e');
-        let exponent = v.slice(eloc);
-        v = v.slice(0, eloc);
-        if (exponent.length === 3) exponent = exponent.slice(0, 2) + '0' + exponent.slice(-1);
-        return v + exponent
-    },
-    E: function () {
-        return (formats.e.apply(this, arguments)).toUpperCase();
-    },
-    f: function (arg, precision) {
-        if (precision === false) precision = 6;
-        return arg.toFixed(precision);
-    },
-    F: function () {
-        return (formats.f.apply(this, arguments)).toUpperCase();
-    },
-    g: function (arg, precision) {
+    F:(a,p)=>number_formats.f(a,p).toUpperCase(),
+    g (arg, precision) {
         if (arg === 0) return '0';
+        if (Number.isNaN(arg)) return 'nan';
+        if (!Number.isFinite(arg)) return arg>0?'inf':'-inf';
         if (precision === false) precision = 6;
-        let a = Math.abs(arg);
+        else if(precision === 0) precision = 1;
+
+        let exp = Math.floor(Math.log10(arg));
+
         let v;
-        if (1e-4 <= a && a < Math.pow(10, precision)) {
-            if (a < 0.1) { // between 1e-4 and 1e-2 Python writes e.g. 0.00123
-                let etype = arg.toExponential(precision);
-                etype = etype.replace('.', '');
-                let eloc = etype.search('e');
-                let exponent = Number(etype.slice(eloc + 2));
-                let val = etype.slice(0, eloc);
-                let length = val.length;
-                if (arg < 0) {
-                    length++;
-                    precision++;
-                }
-                if (length > precision) val = val.slice(0, precision);
-                let sign = '';
-                if (val.slice(0, 1) === '-') {
-                    sign = '-';
-                    val = val.slice(1)
-                }
-                v = val.slice(0, precision);
-                while (v.slice(-1) === '0') v = v.slice(0, -1);
-                if (exponent === 2) return sign + '0.0' + v;
-                else if (exponent === 3) return sign + '0.00' + v;
-                else return sign + '0.000' + v // exponent must be 4
-            } else {
-                if (a >= 1) precision--;
-                v = formats.e(a, precision);
-                let eloc = v.search('e');
-                let exponent = Number(v.slice(eloc + 1));
-                let val = Number(v.slice(0, eloc));
-                v = formats.f(val * pow(10, exponent));
-                while (v.slice(-1) === '0') v = v.slice(0, -1);
-                if (v.slice(-1) === '.') v = v.slice(0, -1);
-                return v;
+        if (-4 <= exp && exp < precision) {
+            v = number_formats.f(arg, precision - 1 - exp);
+
+            if(v.search(/\./) >= 0) {
+                let last_zeros = v.search(/(\.)?0*$/);
+
+                if (last_zeros >= 0)
+                    v = v.slice(0, last_zeros);
             }
+
+            return v;
         }
         else {
             precision--;
-            v = formats.e(a, precision);
+            v = number_formats.e(arg, precision);
             let eloc = v.search('e');
             let exponent = v.slice(eloc);
             v = v.slice(0, eloc);
-            while (v.slice(-1) === '0') v = v.slice(0, -1);
-            if (v.slice(-1) === '.') v = v.slice(0, -1);
+
+            let last_zeros = v.search(/(\.)?0*$/);
+            if(last_zeros >= 0)
+                v = v.slice(0, last_zeros);
+
             return v + exponent;
         }
     },
-    G: function () {
-        return formats.g.apply(this, arguments).toUpperCase();
-    },
-    n: function (a) {
-        if(Number.isInteger(a)) return formats.d.apply(this, arguments);
-        return formats.g.apply(this, arguments);
-    },
-    o: function () {
-        return Number.parseInt(a).toString(8);
-    },
-    x: function () {
-        return Number.parseInt(a).toString(16);
-    },
-    X: function () {
-        return formats.x.apply(this, arguments).toUpperCase();
-    },
-    '%': function () {
-        arguments[0] *= 100;
-        return formats.f.apply(this, arguments) + '%';
-    }
+    G:(a,p)=>number_formats.g(a,p).toUpperCase(),
+    n:(a,p)=>number_formats[isInteger(a)?'d':'g'](a,p),
+    o:(a)=>Number.parseInt(a).toString(8),
+    x:(a)=>Number.parseInt(a).toString(16),
+    X:(a,p)=>number_formats.x(a,p).toUpperCase(),
+    '%':(a,p)=>number_formats.f(a*100,p) + '%'
+};
+
+let string_formats = {
+    s:(a)=>a,
+    u:(a)=>a.toUpperCase(),
+    l:(a)=>a.toLowerCase(),
+    t:(a)=>a.toLowerCase().replace(/(\w)(\w*)/g, (_, i, r)=>i.toUpperCase() + (r != null ? r : "")),
+    S:(a)=>a.toLowerCase().replace(/(\w)(\w*)/, (_, i, r)=>i.toUpperCase() + (r != null ? r : "")),
 };
 
 let prefixes = {
@@ -152,35 +121,53 @@ export function format_value(val, fstr){
     }
 
     let match = format_re.exec(fstr);
+    if(!match) throw `Faulty format ${fstr}!`;
 
-    let filler = match[1] || ' ';
-    let fill_type = match[2] || '<';
-    let sign = match[3] || '-';
-    let prefix_alternate = !!(match[4]);
-    if(match[5]) {
-        filler = '0';
-        fill_type = '=';
-    }
-    let min_width = match[6] ? Number(match[6]) : 0;
-    let precision = match[7] ? Number(match[7]) : false;
-    let format = match[8] || '';
+    let moe = (m, e)=> m !== undefined ? m : e;
+
+    let fill_zero = match[6] === '0';
+    let filler = moe(match[2], fill_zero?'0':' ');
+    let fill_type = moe(match[3], fill_zero?'=':false);
+    let sign = moe(match[4], '-');
+    let prefix_alternate = !!(match[5]);
+    let min_width = match[7] !== undefined ? Number(match[7]) : 0;
+    let thousand_delimiter = !!(match[8]);
+    let precision = match[10] !== undefined ? Number(match[10]) : false;
+    let format = moe(match[11], '');
     let ret = '';
 
     if((typeof val === 'number') || (val instanceof Number)){
+        fill_type = fill_type || '>';
         if(format === '') format = 'n';
 
-        if(!formats[format]) throw `ValueError: Unknown format code '${format}' for object of type 'number'`;
+        if(!number_formats[format]) throw `ValueError: Unknown format code '${format}' for object of type 'number'`;
 
-        ret = formats[format](val, precision);
+        ret = number_formats[format](val, precision);
         let r_sign = ret[0] === '-' ? '-' : '+';
         let r_abs = ret[0] === '-' ? ret.slice(1) : ret;
-        if(prefix_alternate){
-            r_abs = (prefixes[format] || '') + r_abs;
+        let prefix = prefix_alternate ? (prefixes[format] || '') : '';
+
+        if(thousand_delimiter){
+            let dot = r_abs.search(/\./);
+            if(dot === -1) dot = r_abs.length;
+            for(let i=dot-1;i;--i){
+                if((dot-i)%3 === 0){
+                    r_abs = r_abs.slice(0,i) + ',' + r_abs.slice(i);
+                }
+            }
         }
 
         if(fill_type === '='){
-            ret = r_sign + pad(r_abs, min_width - 1, filler, '>');
+            min_width -= prefix.length;
+
+            if(r_sign === '+' && sign !== '+'){
+                r_sign = sign === '-' ? '' : sign;
+            }
+            min_width -= r_sign.length;
+
+            ret = r_sign + prefix + pad(r_abs, min_width, filler, '>');
         }else{
+            r_abs = prefix + r_abs;
             if(r_sign === '+' && sign !== '+'){
                 r_sign = sign === '-' ? '' : sign;
             }
@@ -188,159 +175,509 @@ export function format_value(val, fstr){
         }
 
         return ret;
-    }
+    }else {
+        fill_type = fill_type || '<';
+        if (fill_type === '=') throw `ValueError: '=' alignment not allowed in string format specifier`;
+        val = ''+val;
+        if(format === '') format = 's';
+        if(!string_formats[format])
+            throw `ValueError: Unknown format code '${format}' for object of type '${typeof val}'`;
 
-    if(format === '' || format === 's'){
-        if(fill_type === '=') fill_type = '';
+        val = string_formats[format](val);
+
         let ret = pad('' + val, min_width, filler, fill_type);
         return precision !== false ? ret.slice(0, precision) : ret;
     }
-
-    throw `ValueError: Unknown format code '${format}' for object of type '${typeof val}'`;
 }
 
-export function vformat(str, argc, argv, iterator_key) {
+let braces_re = /[{}]/;
+
+export function vformat(str, argc, argv) {
     let values = arrayLike(argc) ? toArray(argc) : [];
     let kvargs = isObject(argv) ? argv : isObject(argc) ? argc : {};
-    let in_iterator = arguments.length > 3;
+    let values_shift = 0;
 
-    if(in_iterator){
-        kvargs = isObject(argc) ? argc : {};
-        if(!isObject(argc) && !arrayLike(argc)){
-            values = [argc];
-        }
-    }
-
-    function get_kv(ref, kv) {
-        if(ref.length === 0) return kv;
-        let i_pos = ref.search(/[.\[\]]/);
-        if(i_pos === 0) throw `Faulty reference: ${ref}`;
-        if(i_pos < 0) return kv[ref];
-
-        let index = ref.slice(0, i_pos);
-        let rest = ref.slice(i_pos + 1);
-
-        return get_kv(rest, kv[index]);
-    }
-
-    function get_value(ref) {
-        let i_pos = ref.search(/[.\[\]]/);
-        if(i_pos === 0) throw `Faulty reference: ${ref}`;
-
-        let index = i_pos > 0 ? ref.slice(0, i_pos) : ref;
-
-        if(index.match(/^[0-9]*$/g)){
-            return get_kv(ref, values);
-        }
-
-        return get_kv(ref, kvargs);
-    }
-
+    let state = 'root';
     let rest = str;
-    let parsed = '';
-    let index_shift = 0;
-    let brace_stack = [];
+    let start = '';
+    let expression;
+    let closure = {};
 
-    while (rest.length) {
-        let brace = rest.search(/[{}]/);
-        if(brace < 0){
-            parsed += rest;
-            rest = '';
-            continue;
+    let stack = [];
+
+    function get_val(keys, type, arg) {
+        let point;
+        if(closure.is_muted) return;
+        if(type === '~'){
+            if(keys[0] === '') keys.shift(); // case of {~}, {~.foo.bar} whereas the last is equal to {~foo.bar}
+
+            let c = closure;
+            while(keys[0] === '<'){
+                keys.shift();
+                if(!c.previous || !stack[c.previous]) throw 'Too many back arrows in keychain';
+                c = stack[c.previous];
+            }
+
+            point = c.val;
+
+            if(!keys.length){ // case of {~}
+                return point;
+            }
+        }else {
+            if (arguments.length > 2)
+                point = arg;
+            else if (isNumber(keys[0]))
+                point = values;
+            else if (keys[0] === '') {
+                keys[0] = values_shift++;
+                point = values;
+            } else
+                point = kvargs;
         }
 
-        parsed += rest.slice(0, brace);
-        let b = rest[brace];
-        rest = rest.slice(brace + 1);
-
-        if(rest[0] === b && brace_stack.length === 0){
-            parsed += b;
-            rest = rest.slice(1);
-            continue;
+        for(let i of keys){
+            point = point[i];
         }
+        return point;
+    }
 
-        if(b === '{') {
-            brace_stack.push(parsed);
-            parsed = '';
-        }else{
-            if(brace_stack.length === 0)  throw 'Found unmatched } braces!';
+    let functions = {
+        'if'(type, params, rest){
+            let is_muted = closure.is_muted;
+            stack.push(closure);
 
-            if(in_iterator){
-                if(parsed === '.'){
-                    parsed = '' + iterator_key;
+            closure = {};
+            closure.ender = 'endif';
+            closure.previous = stack.length - 1;
+            closure.val = params[0];
+            closure.clause_counter = 0;
+            closure.prev_is_muted = is_muted;
+            closure.is_muted = is_muted || !(closure.val);
 
-                    parsed = brace_stack.pop() + parsed;
+            if(closure.is_muted){
+                closure.start = start;
+                start = '';
+            }
+        },
+        'ifeq'(type, params, rest){
+            return functions['if'](type, [params[0] == params[1]], rest);
+        },
+        'ifgt'(type, params, rest){
+            return functions['if'](type, [params[0] > params[1]], rest);
+        },
+        'ifge'(type, params, rest){
+            return functions['if'](type, [params[0] >= params[1]], rest);
+        },
+        'else'(){
+            if(closure.ender !== 'endif' || closure.clause_counter > 0) throw 'Unexpected "else"';
+            closure.clause_counter++;
 
-                    continue;
-                }else if(parsed === '..'){
-                    parsed = brace_stack.pop();
+            if(closure.is_muted){
+                start = closure.start;
+            }else{
+                closure.start = start;
+                start = '';
+            }
+            closure.is_muted = closure.prev_is_muted || !closure.is_muted;
+        },
+        'endif'(){
+            if(closure.is_muted){
+                start = closure.start;
+            }
+            if(closure.previous !== stack.length - 1) throw 'Stack corrupt';
+            closure = stack.pop();
+        },
+        'key'(type, params, rest){
+            let c = closure;
+            if(closure.is_muted) return;
+            if(params && params.length > 0){
+                for(let i=0;i<params[0];++i){
+                    if(!c.previous || !stack[c.previous]) throw `key(${params[0]}) is too many`;
+                    c = stack[c.previous];
+                }
+            }
+            if(rest && rest[0] === ':')
+                return format_value(closure.key, rest.slice(1));
+            return format_value(closure.key, '');
+        },
+        'print'(type, params, rest){
+            let c = closure;
+            if(closure.is_muted) return;
+            if(rest && rest[0] === ':')
+                return format_value(params[0], rest.slice(1));
+            return format_value(params[0], '');
+        },
+        '(loop)'(generator){
+            let is_muted = closure.is_muted;
+            stack.push(closure);
 
-                    if(brace_stack.length) throw 'Found unmatched { braces!';
+            closure = {};
+            closure.ender = 'endloop';
+            closure.previous = stack.length - 1;
+            closure.is_muted = is_muted;
+            closure.started_with_shift = values_shift;
+            closure.rest = rest;
+            closure.generator = generator;
+            functions[closure.ender]();
+        },
+        '>'(type, params, rest){
+            let is_muted = closure.is_muted;
+            stack.push(closure);
 
-                    return [parsed, rest];
+            closure = {};
+            closure.ender = '<';
+            closure.previous = stack.length - 1;
+            closure.is_muted = is_muted;
+
+            closure.val = params[0];
+        },
+        '<'(){
+            if(closure.previous !== stack.length - 1) throw 'Stack corrupt';
+            closure = stack.pop();
+        },
+        'for'(type, params, rest){
+            functions['(loop)']((function*(val, is_muted) {
+                if(!isNumber(val.length)) throw `Iteration isn't possible without a proper 'length' attribute`;
+                if(!is_muted)
+                for(let i=0; i<val.length; ++i){
+                    yield [i, val[i]];
+                }
+            })(params[0], closure.is_muted));
+        },
+        'in'(type, params, rest){
+            functions['(loop)']((function*(val, is_muted) {
+                if(!is_muted)
+                for(let i in val){
+                    yield [i, val[i]];
+                }
+            })(params[0], closure.is_muted));
+        },
+        'in_own'(type, params, rest){
+            functions['(loop)']((function*(val, is_muted) {
+                if(!is_muted)
+                for(let i in val){
+                    if(own(val, i))
+                        yield [i, val[i]];
+                }
+            })(params[0], closure.is_muted));
+        },
+        'of'(type, params, rest){
+            functions['(loop)']((function*(val, is_muted) {
+                let counter = 0;
+                if(!is_muted)
+                for(let i of val){
+                    yield [counter++, i];
+                }
+            })(params[0], closure.is_muted));
+        },
+        'endloop'(){
+            if(closure.finished){
+                start = closure.start;
+                if(closure.previous !== stack.length - 1) throw 'Stack corrupt';
+                closure = stack.pop();
+            }else {
+                let ret = closure.generator.next();
+                rest = closure.rest;
+                if (!ret.done) {
+                    [closure.key, closure.val] = ret.value;
+                } else {
+                    closure.start = start;
+                    start = '';
+                    closure.is_muted = true;
+                    closure.finished = true;
+                }
+            }
+        },
+        '='(){
+            if(closure.ender) return functions[closure.ender].apply(this, arguments);
+        }
+    };
+
+    let state_machine = {
+        'root': {
+            '': ()=> 'end',
+            'default'(symbol){
+                let brace_pos = rest.search(braces_re);
+                if(brace_pos >= 0){
+                    start += symbol + rest.slice(0, brace_pos);
+                    rest = rest.slice(brace_pos);
+                }else{
+                    start += symbol + rest;
+                    rest = '';
+                }
+            },
+            '{': ()=>state_machine['{'](),
+        },
+        'end': {},
+        '{'() {
+            let s = rest[0];
+            if(s === '{'){
+                start += '{';
+                rest = rest.slice(1);
+                return;
+            }
+
+            stack.push([state, expression, start]);
+            expression = {};
+            start = '';
+
+            expression.type = '';
+            if(s === '='){
+                expression.type = '=';
+                rest = rest.slice(1);
+                return 'func';
+            }
+            if(s === '~'){
+                expression.type = '~';
+                rest = rest.slice(1);
+            }
+            return 'key_literal';
+        },
+        'key_literal': {
+            'enter'(){
+                // stack.push(from);
+                expression.key = [];
+            },
+            '"': ()=> state_machine['"'](),
+            '{': ()=> state_machine['{'](),
+            'end_key'(){
+                this.end_key_part();
+                expression.val = get_val(expression.key, expression.type);
+            },
+            '}'(){
+                this.end_key();
+                return state_machine['}']();
+            },
+            ':'(){
+                this.end_key();
+                return 'fmt'
+            },
+            '!'(){
+                this.end_key();
+                return 'func'
+            },
+            'end_key_part'(){
+                if(!expression.key) expression.key = [];
+                expression.key.push(start);
+                start='';
+            },
+            '.'(){this.end_key_part()},
+            'default'(s){
+                start += s;
+            }
+        },
+        'fmt': {
+            '{': ()=> state_machine['{'](),
+            '}'(){
+                expression.format = start;
+                start = '';
+                return state_machine['}']();
+            },
+            'default'(s){
+                start += s;
+            },
+        },
+        'func': {
+            'exit'(to){
+                if(['func', 'key_literal'].indexOf(to) >= 0) return;
+                expression.function = start;
+                start = '';
+            },
+            '"': ()=> state_machine['"'](),
+            '{': ()=> state_machine['{'](),
+            '}': ()=> state_machine['}'](),
+            '(': ()=> 'function_params',
+            ':'(s){
+                rest = s + rest;
+                return 'function_rest';
+            },
+            'default'(s){
+                start += s;
+            },
+        },
+        'function_params':{
+            'enter'(){
+                if(!('function_params' in expression))
+                    expression.function_params = [];
+            },
+            '"': ()=> state_machine['"'](),
+            ','(){
+                expression.function_params.push(start);
+                start='';
+            },
+            ')'(){
+                expression.function_params.push(start);
+                start='';
+                return 'function_rest';
+            },
+            '='(){
+                if(start!== '') throw 'Unexpected =';
+                expression.function_param_key_type = '';
+                return 'function_param_key';
+            },
+            '~'(){
+                if(start!== '') throw 'Unexpected ~';
+                expression.function_param_key_type = '~';
+                return 'function_param_key';
+            },
+            '{': ()=> state_machine['{'](),
+            '}': ()=> state_machine['}'](),
+            'exit'(to){
+                if(['func', 'key_literal', 'function_param_key', 'function_rest'].indexOf(to) >= 0) return;
+                throw 'Unexpected termination';
+            },
+            'default'(s){
+                start += s.trim();
+            }
+        },
+        'function_param_key':{
+            'enter'(){
+                expression.function_param_key = [];
+            },
+            '.'(){
+                expression.function_param_key.push(start);
+                start='';
+            },
+            '"': ()=> state_machine['"'](),
+            ','(){
+                expression.function_param_key.push(start);
+                expression.function_params.push(get_val(expression.function_param_key,
+                    expression.function_param_key_type));
+                start='';
+                return 'function_params';
+            },
+            ')'(){
+                expression.function_param_key.push(start);
+                expression.function_params.push(get_val(expression.function_param_key,
+                    expression.function_param_key_type));
+                start='';
+                return 'function_rest';
+            },
+            '{': ()=> state_machine['{'](),
+            '}': ()=> state_machine['}'](),
+            'exit'(to){
+                if(['func', 'key_literal', 'function_params', 'function_rest'].indexOf(to) >= 0) return;
+                throw 'unexpected termination!'
+            },
+            'default'(s){
+                start += s;
+            }
+        },
+        'function_rest':{
+            '"': ()=> state_machine['"'](),
+            '{': ()=> state_machine['{'](),
+            '}'(){
+                expression.function_rest = start;
+                start = '';
+                return state_machine['}']();
+            },
+            'default'(s){
+                start += s;
+            }
+        },
+        '"'(){
+            let pos;
+            let str = '"';
+            while(true) {
+                pos = rest.search(/[\\"]/);
+                if(pos === -1) throw 'Unclosed string literal!';
+
+                let el = rest[pos];
+                if(el === '\\') ++pos;// skip next symbol;
+                str += rest.slice(0, pos + 1);
+                rest = rest.slice(pos + 1);
+
+                if(el === '"') break;
+            }
+            str = JSON.parse(str);
+
+            start += str;
+        }, // string literal
+        '}'(){
+            let s = rest[0];
+            if(state === 'root') {
+                if (s === '}') {
+                    start += '}';
+                    rest = rest.slice(1);
+                    return;
+                }else{
+                    throw "Single '}' encountered in format string";
                 }
             }
 
-            let colon = parsed.search(':');
-            if (colon < 0) {
-                if(parsed.length)
-                    parsed = '' + format_value(get_value(parsed), '');
-                else
-                    parsed = '' + format_value(values[index_shift++], '');
-            }else{
-                let val = (colon > 0) ? get_value(parsed.slice(0, colon)) : values[index_shift++];
-                let fmt = parsed.slice(colon + 1);
+            return 'eval'
+            // stack.push([from, expression, start]);
+            // expression = {};
+            // start = '';
+        },
+        'eval'(s){
+            rest = s + rest;
 
-                if(fmt === 'in..'){
-                    parsed = '';
-                    let chunk, new_rest;
-                    for(let i in val){
-                        [chunk, new_rest] = vformat(rest, val[i], null, i);
-                        parsed += chunk;
-                    }
-                    rest = new_rest;
-                }else if(fmt === 'in own..'){
-                    parsed = '';
-                    let chunk, new_rest;
-                    for(let i in val) if(own(val, i)){
-                        [chunk, new_rest] = vformat(rest, val[i], null, i);
-                        parsed += chunk;
-                    }
-                    rest = new_rest;
-                }else if(fmt === 'of..'){
-                    parsed = '';
-                    let count = 0;
-                    let chunk, new_rest;
-                    for(let i of val){
-                        [chunk, new_rest] = vformat(rest, i, null, count++);
-                        parsed += chunk;
-                    }
-                    rest = new_rest;
-                }else if(fmt === 'length..'){
-                    if(!isNumber(val.length)) throw 'Value length missing';
-                    parsed = '';
-                    let chunk, new_rest;
-                    for(let i=0;i<val.length;++i){
-                        [chunk, new_rest] = vformat(rest, val[i], null, i);
-                        parsed += chunk;
-                    }
-                    rest = new_rest;
-                }else if(fmt === 'if..'){
-                    parsed = '';
-                    [parsed, rest] = vformat(rest, val[i], null, i);
-                }else
-                    parsed = '' + format_value(val, fmt);
+            let val, expr = expression, from;
+            [from, expression, start] = stack.pop();
+
+            if(expr.key){
+                val = expr.val;
+                if(!expr.function_params)
+                    expr.function_params = [];
+                expr.function_params.unshift(val);
             }
 
-            parsed = brace_stack.pop() + parsed;
+            if (expr.function) {
+                if(functions[expr.function]){
+                    val = functions[expr.function](
+                        expr.type,
+                        expr.function_params,
+                        expr.function_rest
+                        ) || '';
+                }else{
+                    throw `Function ${expr.function} not found`;
+                }
+            } else {
+                val = format_value(val, expr.format || '');
+            }
+            start += val;
+
+            return from;
+        }
+    };
+
+    function call_state(symbol) {
+        if(state_machine[state]){
+            if(isFunction(state_machine[state]))
+                return state_machine[state](symbol);
+
+            if(isFunction(state_machine[state][symbol]))
+                return state_machine[state][symbol](symbol);
+
+            return state_machine[state]['default'](symbol);
+        }else throw `Unknown state ${state}`;
+    }
+
+    function change_state(new_state) {
+        if(state !== new_state){
+            if(state_machine[new_state]){
+                if(state_machine[state]['exit'])
+                    state_machine[state]['exit'](new_state);
+                let from = state;
+                state = new_state;
+                if(state_machine[state]['enter'])
+                    state_machine[state]['enter'](from);
+            }else throw `Unknown state ${new_state}`;
         }
     }
 
-    if(in_iterator) throw 'Found unclosed iterator loop!';
+    while(state !== 'end'){
+        let symbol = rest[0] || '';
+        rest = rest.slice(1);
 
-    if(brace_stack.length) throw 'Found unmatched { braces!';
+        let ret = call_state(symbol);
 
-    return parsed;
+        if(ret)
+            change_state(ret);
+    }
+
+    return start;
 }
 
 export function format() {

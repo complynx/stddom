@@ -1,25 +1,37 @@
 "use strict";
 
+let toStr = ((ts)=>(o)=>ts.call(o))(Object.prototype.toString);
+
 export function isString(a) {
     return (typeof a === "string") || (a instanceof String);
 }
 export function isObject(obj) {
-    return Object.prototype.toString.call(obj) === '[object Object]';
+    return toStr(obj) === '[object Object]';
 }
 export function isFunction(obj) {
-    return typeof(obj) === 'function';
+    return typeof(obj) === 'function' || (obj instanceof Function);
 }
 
 export function arrayLike(item){
     if(typeof(item)=== "string") return false; //string is mostly like array, but it is still a primitive
-    return (item != null && typeof(item.length) === 'number'//Can't remember, why the last test is necessary
-        && Object.prototype.toString.call(item) !== '[object Function]');
+    return (item != null && isInteger(item.length) && item.length >= 0
+        && toStr(item) !== '[object Function]'); //Can't remember, why/where the last test is necessary
 }
 
 export function isNumber(obj){
-    try{
-        return !isNaN(obj);
-    }catch(e){
-        return false; // case it's Symbol
+    if(isString(obj) || typeof obj === 'number'){
+        if(isString(obj) && (obj === '' || obj.trim() === '')) return false;
+
+        try{
+            return !isNaN(obj) && obj !== null;
+        }catch(e){
+            return false; // case it's Symbol
+        }
     }
+    return false;
 }
+
+export function isInteger(x) {
+    return !isNaN(x) && !((x=parseFloat(x))%1) && x<=Number.MAX_SAFE_INTEGER && x>=Number.MIN_SAFE_INTEGER;
+}
+

@@ -2,7 +2,7 @@
 
 import {arrayLike} from "./type_checks.js";
 
-let own = Object.prototype.hasOwnProperty.call;
+let own = ((own)=>(x, i)=>own.call(x, i))(Object.prototype.hasOwnProperty);
 
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
