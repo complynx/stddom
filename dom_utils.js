@@ -2,6 +2,10 @@ import {isFunction, isObject} from "./type_checks.js";
 import {toArray} from "./utils.js";
 import {generate_id} from "./mongo.js";
 
+let Em2Px = (el=document.body)=>parseFloat(window.getComputedStyle(el).fontSize);
+
+export {Em2Px};
+
 export function get_offset(el, parent){
     parent = parent || document.documentElement;
     let ret = {

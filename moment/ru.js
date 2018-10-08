@@ -1,17 +1,13 @@
 'use strict';
 import {moment} from "../moment.js";
 //! moment.js locale configuration
-//! locale : Russian [ru]
-//! author : Viktorminator : https://github.com/Viktorminator
-//! Author : Menelion Elensúle : https://github.com/Oire
-//! author : Коренберг Марк : https://github.com/socketpair
 
-function plural$4(word, num) {
-    let forms = word.split('_');
+function plural(word, num) {
+    var forms = word.split('_');
     return num % 10 === 1 && num % 100 !== 11 ? forms[0] : (num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20) ? forms[1] : forms[2]);
 }
-function relativeTimeWithPlural$3(number, withoutSuffix, key) {
-    let format = {
+function relativeTimeWithPlural(number, withoutSuffix, key) {
+    var format = {
         'ss': withoutSuffix ? 'секунда_секунды_секунд' : 'секунду_секунды_секунд',
         'mm': withoutSuffix ? 'минута_минуты_минут' : 'минуту_минуты_минут',
         'hh': 'час_часа_часов',
@@ -23,15 +19,15 @@ function relativeTimeWithPlural$3(number, withoutSuffix, key) {
         return withoutSuffix ? 'минута' : 'минуту';
     }
     else {
-        return number + ' ' + plural$4(format[key], +number);
+        return number + ' ' + plural(format[key], +number);
     }
 }
-let monthsParse$4 = [/^янв/i, /^фев/i, /^мар/i, /^апр/i, /^ма[йя]/i, /^июн/i, /^июл/i, /^авг/i, /^сен/i, /^окт/i, /^ноя/i, /^дек/i];
+var monthsParse = [/^янв/i, /^фев/i, /^мар/i, /^апр/i, /^ма[йя]/i, /^июн/i, /^июл/i, /^авг/i, /^сен/i, /^окт/i, /^ноя/i, /^дек/i];
 
 // http://new.gramota.ru/spravka/rules/139-prop : § 103
 // Сокращения месяцев: http://new.gramota.ru/spravka/buro/search-answer?s=242637
 // CLDR data:          http://www.unicode.org/cldr/charts/28/summary/ru.html#1753
-moment.defineLocale('ru', {
+var ru = moment.defineLocale('ru', {
     months : {
         format: 'января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря'.split('_'),
         standalone: 'январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь'.split('_')
@@ -48,9 +44,9 @@ moment.defineLocale('ru', {
     },
     weekdaysShort : 'вс_пн_вт_ср_чт_пт_сб'.split('_'),
     weekdaysMin : 'вс_пн_вт_ср_чт_пт_сб'.split('_'),
-    monthsParse : monthsParse$4,
-    longMonthsParse : monthsParse$4,
-    shortMonthsParse : monthsParse$4,
+    monthsParse : monthsParse,
+    longMonthsParse : monthsParse,
+    shortMonthsParse : monthsParse,
 
     // полные названия с падежами, по три буквы, для некоторых, по 4 буквы, сокращения с точкой и без точки
     monthsRegex: /^(январ[ья]|янв\.?|феврал[ья]|февр?\.?|марта?|мар\.?|апрел[ья]|апр\.?|ма[йя]|июн[ья]|июн\.?|июл[ья]|июл\.?|августа?|авг\.?|сентябр[ья]|сент?\.?|октябр[ья]|окт\.?|ноябр[ья]|нояб?\.?|декабр[ья]|дек\.?)/i,
@@ -72,28 +68,28 @@ moment.defineLocale('ru', {
         LLLL : 'dddd, D MMMM YYYY г., H:mm'
     },
     calendar : {
-        sameDay: '[Сегодня в] LT',
-        nextDay: '[Завтра в] LT',
-        lastDay: '[Вчера в] LT',
+        sameDay: '[Сегодня, в] LT',
+        nextDay: '[Завтра, в] LT',
+        lastDay: '[Вчера, в] LT',
         nextWeek: function (now) {
             if (now.week() !== this.week()) {
                 switch (this.day()) {
                     case 0:
-                        return '[В следующее] dddd [в] LT';
+                        return '[В следующее] dddd, [в] LT';
                     case 1:
                     case 2:
                     case 4:
-                        return '[В следующий] dddd [в] LT';
+                        return '[В следующий] dddd, [в] LT';
                     case 3:
                     case 5:
                     case 6:
-                        return '[В следующую] dddd [в] LT';
+                        return '[В следующую] dddd, [в] LT';
                 }
             } else {
                 if (this.day() === 2) {
-                    return '[Во] dddd [в] LT';
+                    return '[Во] dddd, [в] LT';
                 } else {
-                    return '[В] dddd [в] LT';
+                    return '[В] dddd, [в] LT';
                 }
             }
         },
@@ -101,21 +97,21 @@ moment.defineLocale('ru', {
             if (now.week() !== this.week()) {
                 switch (this.day()) {
                     case 0:
-                        return '[В прошлое] dddd [в] LT';
+                        return '[В прошлое] dddd, [в] LT';
                     case 1:
                     case 2:
                     case 4:
-                        return '[В прошлый] dddd [в] LT';
+                        return '[В прошлый] dddd, [в] LT';
                     case 3:
                     case 5:
                     case 6:
-                        return '[В прошлую] dddd [в] LT';
+                        return '[В прошлую] dddd, [в] LT';
                 }
             } else {
                 if (this.day() === 2) {
-                    return '[Во] dddd [в] LT';
+                    return '[Во] dddd, [в] LT';
                 } else {
-                    return '[В] dddd [в] LT';
+                    return '[В] dddd, [в] LT';
                 }
             }
         },
@@ -125,17 +121,17 @@ moment.defineLocale('ru', {
         future : 'через %s',
         past : '%s назад',
         s : 'несколько секунд',
-        ss : relativeTimeWithPlural$3,
-        m : relativeTimeWithPlural$3,
-        mm : relativeTimeWithPlural$3,
+        ss : relativeTimeWithPlural,
+        m : relativeTimeWithPlural,
+        mm : relativeTimeWithPlural,
         h : 'час',
-        hh : relativeTimeWithPlural$3,
+        hh : relativeTimeWithPlural,
         d : 'день',
-        dd : relativeTimeWithPlural$3,
+        dd : relativeTimeWithPlural,
         M : 'месяц',
-        MM : relativeTimeWithPlural$3,
+        MM : relativeTimeWithPlural,
         y : 'год',
-        yy : relativeTimeWithPlural$3
+        yy : relativeTimeWithPlural
     },
     meridiemParse: /ночи|утра|дня|вечера/i,
     isPM : function (input) {
@@ -173,5 +169,6 @@ moment.defineLocale('ru', {
         doy : 4  // The week that contains Jan 4th is the first week of the year.
     }
 });
+
 moment.locale('ru');
 export {moment};

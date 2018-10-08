@@ -18,6 +18,16 @@ export function arrayLike(item){
         && toStr(item) !== '[object Function]'); //Can't remember, why/where the last test is necessary
 }
 
+let GeneratorClass = (function*(){}).constructor;
+export function isGenerator(item) {
+    return item instanceof GeneratorClass;
+}
+
+let AsyncFunctionClass = (async function(){}).constructor;
+export function isAsyncFunction(item) {
+    return item instanceof AsyncFunctionClass;
+}
+
 export function isNumber(obj){
     if(isString(obj) || typeof obj === 'number'){
         if(isString(obj) && (obj === '' || obj.trim() === '')) return false;
