@@ -108,6 +108,13 @@ export function escapeSpecialChars(str) {
               .replace(/[\t]/g, '\\t');
 }
 
+
+let htmlEscapeTextConverter = document.createElement('div');
+export function escapeHtml(text) {
+    htmlEscapeTextConverter.innerText = text;
+    return htmlEscapeTextConverter.innerHTML;
+}
+
 export function basename(path) {
      return path.replace( /\\/g, '/' ).replace( /.*\//, '' );
 }

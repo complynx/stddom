@@ -128,7 +128,7 @@ export function createFragment(html,doc,depth,iWrapMap){
     }else if(depth>0 && (html instanceof NodeList
         || html instanceof Array)){
         for(let i=0;i<html.length;++i){
-            ret.appendChild(arguments.callee(html[i],doc,depth-1));
+            ret.appendChild(createFragment(html[i],doc,depth-1));
         }
     }else{
         ret.appendChild(createFromString(html,doc,iWrapMap));
