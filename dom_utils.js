@@ -37,6 +37,10 @@ export function unique_id(prefix) {
     return id;
 }
 
+export function isOverflown(element) {
+    return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
+}
+
 export function fix_id(try_id, prefix) {
     try_id = String(try_id || '');
     if(!validate_id_regex.test(try_id)) try_id = '';
