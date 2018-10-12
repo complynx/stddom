@@ -37,6 +37,30 @@ export function unique_id(prefix) {
     return id;
 }
 
+export function parentIndexOf(el) {
+    if(!el.parentNode) return -1;
+    return Array.prototype.indexOf.call(el.parentNode.childNodes, el);
+}
+
+let scrollbar_size = -1;
+export function getScrollbarSize() {
+    if(scrollbar_size < 0) {
+        let d = document.createElement('div');
+
+        d.innerHTML = `
+            <div style="width: 100px;height: 100px;position: fixed; top:-200px; left: -200px;">
+                <div style="overflow-y: scroll; width: 100%;">
+                     <div style="width: 100%;" class="getScrollbarSize-target">&nbsp;</div>
+                </div>
+            </div>`;
+        document.body.appendChild(d);
+        let targ = d.querySelector('.getScrollbarSize-target');
+        scrollbar_size = 100 - targ.offsetWidth;
+        d.remove();
+    }
+    return scrollbar_size;
+}
+
 export function isOverflown(element) {
     return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
 }
