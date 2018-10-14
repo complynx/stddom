@@ -16,7 +16,9 @@
     }
     catch (e) {
         // Match usage of scope
-        let scopeRE = /:scope/gi;
+        let rxTest = /(?:^|,)\s*:scope\s+/,
+              rxStart = /^\s*:scope\s+/i,
+              rxOthers = /,\s*:scope\s+/gi;
 
         // Overrides
         let overrideNodeMethod = (prototype, methodName)=>{
@@ -25,16 +27,23 @@
 
             // Override the method
             prototype[methodName] = function(query) {
-                let nodeList,
+                let nodeList, parentNode, frag, idSelector,
                     gaveId = false,
-                    gaveContainer = false;
+                    gaveContainer = false,
+                    parentIsFragment = false;
 
-                if (query.match(scopeRE)) {
+                if (rxTest.test(query)) {
 
                     if (!this.parentNode) {
                         // Add to temporary container
                         container.appendChild(this);
                         gaveContainer = true;
+                    }
+
+                    if (this.parentNode instanceof DocumentFragment) {
+                        frag = this.parentNode;
+                        while (frag.firstChild) container.appendChild(frag.firstChild);
+                        parentIsFragment = true;
                     }
 
                     let parentNode = this.parentNode;
@@ -45,7 +54,7 @@
                         gaveId = true;
                     }
 
-                    query = query.replace(scopeRE, '#'+this.id);
+                    query = query.replace(rxStart, '#'+this.id).replace(rxOthers, ', #'+this.id);
 
                     // Find elements against parent node
                     nodeList = oldMethod.call(parentNode, query);
@@ -56,7 +65,9 @@
                     }
 
                     // Remove from temporary container
-                    if (gaveContainer) {
+                    if (parentIsFragment) {
+                        while (container.firstChild) frag.appendChild(container.firstChild);
+                    } else if (gaveContainer) {
                         container.removeChild(this);
                     }
 
