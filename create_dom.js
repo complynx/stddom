@@ -1,15 +1,11 @@
 
-
 //from jQuery
-import {toArray} from "./utils.js";
 
 let xhtmlTagCloser = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
     tagName = /<([\w:\-]+)/,
     tagNameSpace = /([\w\-]+):/;
 
 let wrapMap = {
-
-// Support: IE9
     option: {
         level:1,
         prefix:"<select multiple='multiple'>",
@@ -46,7 +42,6 @@ let wrapMap = {
     }
 };
 
-// Support: IE9
 wrapMap.optgroup = wrapMap.option;
 
 wrapMap.thead = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.tbody;
@@ -98,7 +93,7 @@ export function createFromString(html,doc,iWrapMap){
     while ( j-- ) {
         tmp = tmp.lastChild;
     }
-    nodes = toArray(tmp.childNodes);
+    nodes = Array.prototype.slice.call(tmp.childNodes);
 
     frag.textContent="";
     for(let j = 0; j < nodes.length; ++j) frag.appendChild(nodes[j]);
