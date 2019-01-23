@@ -27,10 +27,11 @@ let injector = { // KiberInfinity's JS_InjToFunc_Lib v2.1
     },
     parse: function (func) {
         // определение распарсить переданную функцию или же найти по имени функции.
+        let fn_name = isFunction(func) ? func.name : func;
         let fn = isFunction(func) ? func : eval('window.' + func);
         let res = fn ? String(fn).match(injector.FRegEx) : ['', '', ''];
         return {
-            func_name: func, // для последующего использования в make, функция должна быть передана в parse по строковому имени, либо обязательно переопредление этого параметра на нужное строковое имя.
+            func_name: fn_name, // для последующего использования в make, функция должна быть передана в parse по строковому имени, либо обязательно переопредление этого параметра на нужное строковое имя.
             full: res[0],
             args: res[1],
             code: res[2],
