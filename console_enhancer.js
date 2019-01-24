@@ -1,5 +1,10 @@
 let wrap = ["info", "log", "debug"];
 
+function msStr(ms){
+    let ms_r = ms %1000;
+    return Math.round(ms/1000) + '.' + (ms_r<100?"0":"") + (ms_r<10?"0":"") + ms;
+}
+
 class XConsole{
     constructor(name = "XConsole", _console = console){
         this.module = name;
@@ -21,8 +26,7 @@ class XConsole{
         }
     }
     prefix(){
-        let ms = (new Date()).getMilliseconds() - this.start;
-        return ["%c%8.3f%c [%c%s%c]:\t", "color:#aaa;", ms/1000., "color:#000;", "color:#00f;", this.module, "color:#000;"];
+        return ["%c[%c%s%c]:\t", "color:#000;", "color:#00f;", this.module, "color:#000;"];
     }
     static concatenatePrefix(prefix, args){
         args = Array.from(args);
