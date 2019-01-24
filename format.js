@@ -1,5 +1,7 @@
 import {arrayLike, isObject, isFunction, isNumber, isInteger} from "./type_checks.js";
 import {toArray, own} from "./utils.js";
+import {XConsole} from "./console_enhancer.js";
+let console = new XConsole("format");
 
 let format_re = /^((.)?([><=^]))?([-+\s])?(#)?(0)?([1-9][0-9]*)?(,)?(\.([0-9]*))?(.)?$/;
 

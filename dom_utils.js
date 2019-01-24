@@ -1,6 +1,7 @@
 import {isFunction, isObject} from "./type_checks.js";
 import {toArray} from "./utils.js";
 import {generate_id} from "./mongo.js";
+import {XConsole} from "./console_enhancer.js";
 
 let Em2Px = (el=document.body)=>parseFloat(window.getComputedStyle(el).fontSize);
 
@@ -78,6 +79,7 @@ export function getFromClosest(el, attr) {
 }
 
 let ThrottledEvent = (function(event_name, element) {
+    let console = new XConsole("ThrottledEvent");
     element = element || window;
     let callbacks = new Set(),
         running = false,

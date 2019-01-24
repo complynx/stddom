@@ -1,4 +1,8 @@
-;(function (global, factory) {
+import {XConsole} from "../console_enhancer.js";
+
+let console = new XConsole("moment-loc");
+
+(function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
     global.moment = factory()
