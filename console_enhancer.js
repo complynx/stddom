@@ -1,8 +1,8 @@
 let wrap = ["info", "log", "debug"];
 
 function msStr(ms){
-    let ms_r = ms %1000;
-    return Math.round(ms/1000) + '.' + (ms_r<100?"0":"") + (ms_r<10?"0":"") + ms;
+    let sec = "" + (ms/1000.);
+    return " ".repeat(Math.max(0, 9 - sec.length)) + sec;
 }
 
 class XConsole{
@@ -10,7 +10,7 @@ class XConsole{
         this.module = name;
         this.console = _console;
         let self = this;
-        this.start = (new Date()).getMilliseconds();
+        this.start = Date.now();
 
         for(let i of wrap){
             this[i] = function () {
@@ -26,7 +26,7 @@ class XConsole{
         }
     }
     prefix(){
-        return ["%c[%c%s%c]:\t", "color:#000;", "color:#00f;", this.module, "color:#000;"];
+        return ["%c%s %c[%c%s%c]:\t", "color:#aaa;", msStr(Date.now() - this.start), "color:#000;", "color:#00f;", this.module, "color:#000;"];
     }
     static concatenatePrefix(prefix, args){
         args = Array.from(args);

@@ -1,6 +1,7 @@
 import {createFragment as $C} from "./create_dom.js";
 import {add_css} from "./dom_utils.js";
 import {XConsole} from "./console_enhancer.js";
+import {stopper, mouseTracker} from "./event_utils.js";
 
 let console = new XConsole("Audio Fixer");
 
@@ -229,14 +230,6 @@ let console = new XConsole("Audio Fixer");
     }
 
     let reverseTime = localStorage.AudioMessagePlayerFixReverseTime;
-    let stopper = (func) => {
-        return function (ev) {
-            ev.stopPropagation();
-            ev.preventDefault();
-
-            return func.apply(this, arguments);
-        };
-    };
     let playbackRate = localStorage.AudioMessagePlayerFixPlaybackRate || 1;
     audio_el.playbackRate = playbackRate;
 
@@ -298,36 +291,30 @@ let console = new XConsole("Audio Fixer");
             element.appendChild($C(`<div class="slider_hint audio_player_hint">0:00</div>`));
 
             $('.audio-msg-track--wave-wrapper', element).addEventListener('mousemove', checker_np((ev) => {
-                if (ev.buttons & 1) AudioFixer.seek(ev);
                 AudioFixer.hint(ev);
             }));
-            $('.audio-msg-track--wave-wrapper', element).addEventListener('mouseup', checker_np((ev) => {
+            $('.audio-msg-track--wave-wrapper', element).addEventListener('mousedown', checker_np(mouseTracker((ev)=>{
                 AudioFixer.seek(ev);
-            }));
-            $('.audio-msg-track--wave-wrapper', element).addEventListener('click', checker((ev) => {
-                AudioFixer.seek(ev);
-            }));
+                AudioFixer.hint(ev);
+            })));
 
-            let hinter = function (ev) {
+            let hintToggle = function (ev) {
                 let el = this.closest('.audio-msg-track');
                 if (el === AudioFixer.element) {
                     $('.slider_hint', element).classList[ev.type === 'mouseleave'?"remove":'add']('visible');
                 }
             };
-            $('.audio-msg-track--wave-wrapper', element).addEventListener('mouseenter', hinter);
-            $('.audio-msg-track--wave-wrapper', element).addEventListener('mouseleave', hinter);
-            $('.volume-slider', element).addEventListener('mouseenter', hinter);
-            $('.volume-slider', element).addEventListener('mouseleave', hinter);
+            $('.audio-msg-track--wave-wrapper', element).addEventListener('mouseenter', hintToggle);
+            $('.audio-msg-track--wave-wrapper', element).addEventListener('mouseleave', hintToggle);
+            $('.volume-slider', element).addEventListener('mouseenter', hintToggle);
+            $('.volume-slider', element).addEventListener('mouseleave', hintToggle);
             $('.volume-slider', element).addEventListener('mousemove', checker_np((ev) => {
-                if (ev.buttons & 1) AudioFixer.volume_set(ev);
                 AudioFixer.volume_hint(ev);
             }));
-            $('.volume-slider', element).addEventListener('mouseup', checker_np((ev) => {
+            $('.volume-slider', element).addEventListener('mousedown', checker_np(mouseTracker((ev) => {
+                AudioFixer.volume_hint(ev);
                 AudioFixer.volume_set(ev);
-            }));
-            $('.volume-slider', element).addEventListener('click', checker((ev) => {
-                AudioFixer.volume_set(ev);
-            }));
+            })));
         }
     };
     AudioFixer.rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
@@ -353,7 +340,7 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.hint = function (ev) {
         let rect = $('.audio-msg-track--wave', this.element).getBoundingClientRect();
-        let x = Math.max(0, ev.clientX - rect.left);
+        let x = Math.min(Math.max(0, ev.clientX - rect.left), rect.width);
         let time = audio_el.duration * (x / rect.width);
         let el = $('.slider_hint', this.element);
         let wrect = this.element.getBoundingClientRect();
@@ -363,7 +350,7 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.seek = function (ev) {
         let rect = $('.audio-msg-track--wave', this.element).getBoundingClientRect();
-        let x = Math.max(0, ev.clientX - rect.left);
+        let x = Math.min(Math.max(0, ev.clientX - rect.left), rect.width);
         audio_el.currentTime = audio_el.duration * (x / rect.width);
     };
     AudioFixer.volume_hint = function (ev) {
@@ -377,9 +364,13 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.volume_set = function (ev) {
         let rect = $('.volume-slider .range', this.element).getBoundingClientRect();
-        audio_el.volume = Math.min(Math.max(0, ev.clientX - rect.left) / rect.width, 1);
+        let vol = audio_el.volume = Math.min(Math.max(0, ev.clientX - rect.left) / rect.width, 1);
         let wrect = $('.volume-slider', this.element).getBoundingClientRect();
-        $('.volume-slider .thumb', this.element).style.left = (audio_el.volume * rect.width) + rect.left - wrect.left + 'px';
+        if(!skipProcessing){
+            AudioFixer.volume.gain.value = vol;
+        }
+
+        $('.volume-slider .thumb', this.element).style.left = (vol * rect.width) + rect.left - wrect.left + 'px';
     };
     AudioFixer.timeUpdateListener = function () {
         let progress = audio_el.duration > 0 ? audio_el.currentTime / audio_el.duration : 1;
