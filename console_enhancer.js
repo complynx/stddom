@@ -1,3 +1,5 @@
+import {getTrace} from "./trace.js";
+
 let wrap = ["info", "log", "debug"];
 
 function msStr(ms){

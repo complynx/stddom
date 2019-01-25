@@ -73,7 +73,8 @@ let console = new XConsole("Audio Fixer");
         }
 
         .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .playback-rate,
-        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .volume-slider {
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .volume-slider,
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .menu {
             display: none;
         }
 
@@ -213,6 +214,29 @@ let console = new XConsole("Audio Fixer");
             display: block;
             top: calc((var(--thumb) - var(--height)) / 2);
         }
+        .clx-amsg-buttons .menu {
+            float: right;
+            display: inline-block;
+            position: relative;
+            width: 22px;
+            cursor: pointer;
+            outline: none;
+            height: 20px;
+            margin-right: 5px;
+            background: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Crect%20width%3D%2224%22%20height%3D%2224%22%20opacity%3D%22.15%22%2F%3E%3Cpath%20fill%3D%22%23828A99%22%20d%3D%22M5%2C14%20C3.8954305%2C14%203%2C13.1045695%203%2C12%20C3%2C10.8954305%203.8954305%2C10%205%2C10%20C6.1045695%2C10%207%2C10.8954305%207%2C12%20C7%2C13.1045695%206.1045695%2C14%205%2C14%20Z%20M12%2C14%20C10.8954305%2C14%2010%2C13.1045695%2010%2C12%20C10%2C10.8954305%2010.8954305%2C10%2012%2C10%20C13.1045695%2C10%2014%2C10.8954305%2014%2C12%20C14%2C13.1045695%2013.1045695%2C14%2012%2C14%20Z%20M19%2C14%20C17.8954305%2C14%2017%2C13.1045695%2017%2C12%20C17%2C10.8954305%2017.8954305%2C10%2019%2C10%20C20.1045695%2C10%2021%2C10.8954305%2021%2C12%20C21%2C13.1045695%2020.1045695%2C14%2019%2C14%20Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 50% no-repeat;
+            opacity: .7;
+        }
+        .clx-amsg-buttons .menu:hover{
+            opacity: 1;
+        }
+        .clx-amsg-buttons .menu:hover .eltt_arrow_back{
+            pointer-events: all;
+        }
+        .clx-amsg-buttons .menu:hover .eltt{
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(0) !important;
+        }
 
     `);}
 
@@ -294,7 +318,26 @@ let console = new XConsole("Audio Fixer");
     </div>
     <a class="dl" href="${element.dataset.mp3}">mp3</a>
     <a class="dl" href="${element.dataset.ogg}">ogg</a>
-</div>`));
+    <div class="menu">
+        <div class="eltt eltt_arrow_size_normal eltt_align_center eltt_bottom"
+            style="display: block; left: -48px; top: 23px;">
+            <div class="eltt_arrow_back">
+                <div class="eltt_arrow"></div>
+            </div>
+            <div class="eltt_content">
+              <div class="audio_row__more_actions">
+                  <div class="audio_row__more_action">Share</div>
+                  <div class="audio_row__more_action">Open album</div>
+                  <div class="audio_row__more_action">Add to playlist</div>
+                  <div class="audio_row__more_action">Add to group</div>
+                  <div class="audio_row__more_action">Wiki</div>
+              </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+`));
 
             $('.clx-amsg-buttons .slower', element).addEventListener('click', checker((ev) => {
                 AudioFixer.playbackRateChange(-1);
@@ -336,6 +379,18 @@ let console = new XConsole("Audio Fixer");
                 AudioFixer.volume_hint(ev);
                 AudioFixer.volume_set(ev);
             })));
+
+            $('.clx-amsg-buttons .menu', element).addEventListener('mouseenter', (ev)=>{
+                let use_top = ev.clientY > window.innerHeight / 2;
+                let menu = $('.clx-amsg-buttons .menu .eltt', element);
+                let menuArrow = $('.eltt_arrow_back', menu);
+                let menuButton = $('.clx-amsg-buttons .menu', element);
+                menu.classList.remove(use_top?"eltt_bottom":'eltt_top');
+                menu.classList.add(use_top?"eltt_top":'eltt_bottom');
+                menu.style.top = (use_top ? -(menu.clientHeight + 5) : menuButton.clientHeight + 2) + 'px';
+                menu.style.left = -(menu.clientWidth - menuButton.clientWidth)/2 + 'px';
+                menuArrow.style.left = (menu.clientWidth - menuArrow.offsetWidth)/2 + 'px';
+            });
         }
     };
     AudioFixer.rates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
@@ -426,7 +481,7 @@ let console = new XConsole("Audio Fixer");
     AudioFixer.checkNext = function () {
         let chat = this.element.closest('.im-page-chat-contain');
         let mesg = this.element.closest('.im-mess');
-        let voice_messages = $A('.im-mess-stack .im-mess.im_in .audio-msg-track', chat);
+        let voice_messages = $A('.im-mess-stack .im-mess:not(.im-mess_out):not(.im_out) .audio-msg-track', chat);
         for (let i = 0; i < voice_messages.length - 1; ++i)
             if (voice_messages[i] === this.element) {
                 let vm = voice_messages[i + 1];
@@ -517,10 +572,10 @@ let console = new XConsole("Audio Fixer");
         $('.slider_hint', this.element).classList.remove("visible");
     };
     AudioFixer.pauseGlobalMedia = function () {
-        console.log("pauseGlobalMedia", arguments);
+        console.warn("pauseGlobalMedia %cNOT IMPLEMENTED", "color:red;", arguments);
     };
     AudioFixer.resumeGlobalMedia = function () {
-        console.log("resumeGlobalMedia", arguments);
+        console.warn("resumeGlobalMedia %cNOT IMPLEMENTED", "color:red;", arguments);
     };
 
     Object.defineProperty(AudioFixer, "reverseTime", {
