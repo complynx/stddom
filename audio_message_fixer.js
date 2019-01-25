@@ -16,13 +16,16 @@ let console = new XConsole("Audio Fixer");
     let $ = (s, e = document) => e.querySelector(s);
     let $A = (s, e = document) => e.querySelectorAll(s);
 
+    let overdrive_pos = .75;
+    let overdrive_scale = 4;
+
+    let stop_playing_ts = 10*60; //10 min
 
     // language=CSS
     {add_css(`
-        :root{
+        :root {
             --clx-vk-header: #4a76a8;
         }
-
 
         .clx-amsg-progress {
             height: 100%;
@@ -70,7 +73,7 @@ let console = new XConsole("Audio Fixer");
         }
 
         .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .playback-rate,
-        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .volume-slider{
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .volume-slider {
             display: none;
         }
 
@@ -102,23 +105,24 @@ let console = new XConsole("Audio Fixer");
             content: 'x';
         }
 
-        .clx-content-darkener{
+        .clx-content-darkener {
             z-index: 9000;
             position: fixed;
             left: 0;
             top: 0;
-            right:0;
+            right: 0;
             bottom: 0;
             background: #00000033;
         }
-        .clx-version-message{
+
+        .clx-version-message {
             --header-h: 2.5em;
             --padding: .7em;
             z-index: 9001;
             position: fixed;
             left: 50vw;
             top: 50vh;
-            transform: translate(-50%,-50%);
+            transform: translate(-50%, -50%);
             min-width: 8em;
             background: #fff;
             padding: var(--padding);
@@ -126,7 +130,8 @@ let console = new XConsole("Audio Fixer");
             border-radius: .3em;
             box-shadow: 0 0 4px #33333388;
         }
-        .clx-version-message::before{
+
+        .clx-version-message::before {
             content: "Мы обновились!";
             position: absolute;
             display: block;
@@ -136,19 +141,20 @@ let console = new XConsole("Audio Fixer");
             color: #fff;
             border-top-left-radius: .3em;
             border-top-right-radius: .3em;
-            top:0;
+            top: 0;
             height: var(--header-h);
             left: 0;
             right: 0;
             background: var(--clx-vk-header);
         }
 
-        .clx-amsg-buttons .volume-slider{
+        .clx-amsg-buttons .volume-slider {
             --height: 2px;
-            --width: 50px;
+            --width: ${skipProcessing?50:50/overdrive_pos}px;
             --thumb: 6px;
-            --color-fg:#5181b8;
-            --color-bg:#ffffffcc;
+            --color-fg: #5181b8;
+            --color-od-fg: #e21b00;
+            --color-bg: #ffffffcc;
             height: var(--thumb);
             width: calc(var(--thumb) + var(--width));
             display: inline-block;
@@ -159,14 +165,23 @@ let console = new XConsole("Audio Fixer");
             -moz-user-select: none;
             -webkit-user-select: none;
         }
-        .clx-amsg-buttons .volume-slider .range{
+
+        .clx-amsg-buttons .volume-slider .range {
             width: var(--width);
             margin: calc((var(--thumb) - var(--height)) / 2) auto;
             height: var(--height);
             background: var(--color-fg);
             display: block;
         }
-        .clx-amsg-buttons .volume-slider .thumb::before{
+        .clx-amsg-buttons .volume-slider.has-overdrive .range {
+             background: linear-gradient(to right,
+                    var(--color-fg) 0%,
+                    var(--color-fg) ${overdrive_pos*100}%,
+                    var(--color-od-fg) ${overdrive_pos*100 + 0.0001}%,
+                    var(--color-od-fg) 100%);
+         }
+
+        .clx-amsg-buttons .volume-slider .thumb::before {
             content: '';
             height: var(--thumb);
             width: var(--thumb);
@@ -179,24 +194,29 @@ let console = new XConsole("Audio Fixer");
             opacity: 0;
             top: calc((var(--thumb) - var(--height)) / -2);
         }
-        .clx-amsg-buttons .volume-slider:hover .thumb::before{
+        .clx-amsg-buttons .volume-slider.overdrive .thumb::before {
+            background: var(--color-od-fg);
+        }
+
+        .clx-amsg-buttons .volume-slider:hover .thumb::before {
             opacity: 1;
         }
-        .clx-amsg-buttons .volume-slider .thumb{
+
+        .clx-amsg-buttons .volume-slider .thumb {
             position: absolute;
             left: 0;
             height: var(--height);
             width: var(--width);
             background: var(--color-bg);
             position: absolute;
-            z-index:1;
+            z-index: 1;
             display: block;
-            top:calc((var(--thumb) - var(--height)) / 2);
+            top: calc((var(--thumb) - var(--height)) / 2);
         }
-        
+
     `);}
 
-    AudioFixer.version = 0.9;
+    AudioFixer.version = 0.91;
     console.log("Current version is", AudioFixer.version);
     if(parseFloat(localStorage.clxAudioFixerVersion) < AudioFixer.version){
         console.log(`Previous version was ${localStorage.clxAudioFixerVersion}. Opening version message.`);
@@ -208,8 +228,9 @@ let console = new XConsole("Audio Fixer");
         document.body.appendChild($C(`
 <div class="clx-content-darkener" onclick="clx.audioFixer.closeVersionMessage()">&nbsp;</div>
 <div class="clx-version-message">
-     Я запилил пару апдейтов. Добавил громкость, удалил пару багов.<br>
-     Пишите мне, если что не работает или чего-то хочется добавить!<br><br>
+     Теперь скрипт не будет перепрыгивать через сотню сообщений,<br>
+     чтобы проиграть следующее аудио...<br>
+     <br>
      Спасибо, что летаете нашими авиалиниями!
 </div>`));
     }
@@ -267,7 +288,7 @@ let console = new XConsole("Audio Fixer");
             element.appendChild($C(`
 <div class='clx-amsg-buttons'>
     <span class="playback-rate"><span class='slower'>-</span><span class='speed'>${audio_el.playbackRate}</span><span class='faster'>+</span></span>
-    <div class="volume-slider">
+    <div class="volume-slider${skipProcessing?"":" has-overdrive"}">
         <span class="range">&nbsp;</span>
         <span class="thumb">&nbsp;</span>
     </div>
@@ -358,16 +379,30 @@ let console = new XConsole("Audio Fixer");
         let vol = Math.min(Math.max(0, ev.clientX - rect.left) / rect.width, 1);
         let el = $('.slider_hint', this.element);
         let wrect = this.element.getBoundingClientRect();
-        el.innerText = Math.round(vol*100) + "%";
+        let volo = skipProcessing ? vol : this.volume_overdrive_calc(vol);
+        el.innerText = Math.round(volo*100) + "%";
         el.style.top = rect.top - wrect.top - el.offsetHeight - 8 + 'px';
         el.style.left = rect.left - wrect.left - (el.offsetWidth / 2) + (vol * rect.width) + 'px';
     };
+    AudioFixer.volume_overdrive_calc = function(vol){
+        if(vol < overdrive_pos) return vol / overdrive_pos;
+        let od = vol - overdrive_pos;
+        return 1 + (od * overdrive_scale);
+    };
+    AudioFixer.volume_overdrive_back = function(vol){
+        if(vol <= 1) return vol * overdrive_pos;
+        let od = vol - 1;
+        return overdrive_pos + (od / overdrive_scale);
+    };
     AudioFixer.volume_set = function (ev) {
         let rect = $('.volume-slider .range', this.element).getBoundingClientRect();
-        let vol = audio_el.volume = Math.min(Math.max(0, ev.clientX - rect.left) / rect.width, 1);
+        let vol = Math.min(Math.max(0, ev.clientX - rect.left) / rect.width, 1);
         let wrect = $('.volume-slider', this.element).getBoundingClientRect();
         if(!skipProcessing){
-            AudioFixer.volume.gain.value = vol;
+            let volo = AudioFixer.volume.gain.value = this.volume_overdrive_calc(vol);
+            $('.volume-slider', this.element).classList[volo>1?"add":'remove']('overdrive');
+        }else{
+            audio_el.volume = vol;
         }
 
         $('.volume-slider .thumb', this.element).style.left = (vol * rect.width) + rect.left - wrect.left + 'px';
@@ -390,11 +425,14 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.checkNext = function () {
         let chat = this.element.closest('.im-page-chat-contain');
-        let peer = this.element.closest('[data-peer]');
-        let peer_voice_messages = $A('[data-peer="' + peer.dataset.peer + '"] .audio-msg-track', chat);
-        for (let i = 0; i < peer_voice_messages.length - 1; ++i)
-            if (peer_voice_messages[i] === this.element) {
-                this.togglePlay(peer_voice_messages[i + 1]);
+        let mesg = this.element.closest('.im-mess');
+        let voice_messages = $A('.im-mess-stack .im-mess.im_in .audio-msg-track', chat);
+        for (let i = 0; i < voice_messages.length - 1; ++i)
+            if (voice_messages[i] === this.element) {
+                let vm = voice_messages[i + 1];
+                let mesg_n = vm.closest('.im-mess');
+                if(Math.abs(parseInt(mesg_n.dataset.ts) - parseInt(mesg.dataset.ts)) < stop_playing_ts)
+                    this.togglePlay(vm);
                 break;
             }
     };
@@ -433,7 +471,6 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.play = function () {
         let el = this.element;
-        let ctx = skipProcessing || AudioFixer.context;
         el.classList.add('audio-msg-track_playing');
         audio_el.play();
     };
@@ -461,11 +498,14 @@ let console = new XConsole("Audio Fixer");
         this.element = element;
         audio_el.src = element.dataset.ogg;
         audio_el.playbackRate = this.playbackRate;
+        let ctx = skipProcessing || AudioFixer.context;
         $('.clx-amsg-buttons .speed', this.element).innerText = audio_el.playbackRate;
         this.element.classList.add("clx-player-attached");
         let rect = $('.volume-slider .range', this.element).getBoundingClientRect();
         let wrect = $('.volume-slider', this.element).getBoundingClientRect();
-        $('.volume-slider .thumb', this.element).style.left = (audio_el.volume * rect.width) + rect.left - wrect.left + 'px';
+        $('.volume-slider .thumb', this.element).style.left = (
+            (skipProcessing ? audio_el.volume : AudioFixer.volume_overdrive_back(AudioFixer.volume.gain.value))
+            * rect.width) + rect.left - wrect.left + 'px';
     };
     AudioFixer.detachPlayer = function (element) {
         if (!element) return;
