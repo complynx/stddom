@@ -26,6 +26,13 @@ class XConsole{
                 };
             }
         }
+
+        if(!this.trace)
+            this.trace = function () {
+                let tr = getTrace();
+                tr.shift();
+                this.log(tr);
+            }
     }
     prefix(){
         return ["%c%s %c[%c%s%c]:\t", "color:#aaa;", msStr(Date.now() - this.start), "color:#000;", "color:#00f;", this.module, "color:#000;"];

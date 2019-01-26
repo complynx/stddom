@@ -15,6 +15,7 @@ let console = new XConsole("Audio Fixer");
 
     let $ = (s, e = document) => e.querySelector(s);
     let $A = (s, e = document) => e.querySelectorAll(s);
+    let $R = (e) => e.parentNode && e.parentNode.removeChild(e);
 
     let overdrive_pos = .75;
     let overdrive_scale = 4;
@@ -25,6 +26,15 @@ let console = new XConsole("Audio Fixer");
     {add_css(`
         :root {
             --clx-vk-header: #4a76a8;
+        }
+        
+        .clx-amsg-controls{
+            display: grid;
+            grid-template: auto / auto 20%;
+        }
+        .clx-amsg-controls .dl-buttons{
+            justify-self: center;
+            grid-column: 2;
         }
 
         .clx-amsg-progress {
@@ -48,7 +58,7 @@ let console = new XConsole("Audio Fixer");
             position: relative;
         }
 
-        .clx-amsg-buttons .dl::before {
+        .clx-amsg-controls .dl::before {
             content: "";
             background-image: url(/images/blog/about_icons.png);
             background-repeat: no-repeat;
@@ -60,7 +70,7 @@ let console = new XConsole("Audio Fixer");
             margin-bottom: -5px;
         }
 
-        .clx-amsg-buttons .dl {
+        .clx-amsg-controls .dl {
             float: right;
             font-size: 0.6em;
             margin-right: 0.8em;
@@ -68,17 +78,17 @@ let console = new XConsole("Audio Fixer");
             text-decoration: none;
         }
 
-        .clx-amsg-buttons .dl:hover {
+        .clx-amsg-controls .dl:hover {
             opacity: 1;
         }
 
-        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .playback-rate,
-        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .volume-slider,
-        .audio-msg-track:not(.clx-player-attached) .clx-amsg-buttons .menu {
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-controls .playback-rate,
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-controls .volume-slider,
+        .audio-msg-track:not(.clx-player-attached) .clx-amsg-controls .menu {
             display: none;
         }
 
-        .clx-amsg-buttons .playback-rate {
+        .clx-amsg-controls .playback-rate {
             color: #2a5885;
             cursor: pointer;
             user-select: none;
@@ -86,23 +96,23 @@ let console = new XConsole("Audio Fixer");
             -webkit-user-select: none;
         }
 
-        .clx-amsg-buttons .playback-rate span {
+        .clx-amsg-controls .playback-rate span {
         }
 
-        .clx-amsg-buttons .playback-rate .slower,
-        .clx-amsg-buttons .playback-rate .faster {
+        .clx-amsg-controls .playback-rate .slower,
+        .clx-amsg-controls .playback-rate .faster {
             width: 0.8em;
             text-align: center;
             display: inline-block;
         }
 
-        .clx-amsg-buttons .playback-rate .speed {
+        .clx-amsg-controls .playback-rate .speed {
             width: 2.8em;
             text-align: center;
             display: inline-block;
         }
 
-        .clx-amsg-buttons .playback-rate .speed::after {
+        .clx-amsg-controls .playback-rate .speed::after {
             content: 'x';
         }
 
@@ -149,7 +159,7 @@ let console = new XConsole("Audio Fixer");
             background: var(--clx-vk-header);
         }
 
-        .clx-amsg-buttons .volume-slider {
+        .clx-amsg-controls .volume-slider {
             --height: 2px;
             --width: ${skipProcessing?50:50/overdrive_pos}px;
             --thumb: 6px;
@@ -167,14 +177,14 @@ let console = new XConsole("Audio Fixer");
             -webkit-user-select: none;
         }
 
-        .clx-amsg-buttons .volume-slider .range {
+        .clx-amsg-controls .volume-slider .range {
             width: var(--width);
             margin: calc((var(--thumb) - var(--height)) / 2) auto;
             height: var(--height);
             background: var(--color-fg);
             display: block;
         }
-        .clx-amsg-buttons .volume-slider.has-overdrive .range {
+        .clx-amsg-controls .volume-slider.has-overdrive .range {
              background: linear-gradient(to right,
                     var(--color-fg) 0%,
                     var(--color-fg) ${overdrive_pos*100}%,
@@ -182,7 +192,7 @@ let console = new XConsole("Audio Fixer");
                     var(--color-od-fg) 100%);
          }
 
-        .clx-amsg-buttons .volume-slider .thumb::before {
+        .clx-amsg-controls .volume-slider .thumb::before {
             content: '';
             height: var(--thumb);
             width: var(--thumb);
@@ -195,26 +205,25 @@ let console = new XConsole("Audio Fixer");
             opacity: 0;
             top: calc((var(--thumb) - var(--height)) / -2);
         }
-        .clx-amsg-buttons .volume-slider.overdrive .thumb::before {
+        .clx-amsg-controls .volume-slider.overdrive .thumb::before {
             background: var(--color-od-fg);
         }
 
-        .clx-amsg-buttons .volume-slider:hover .thumb::before {
+        .clx-amsg-controls .volume-slider:hover .thumb::before {
             opacity: 1;
         }
 
-        .clx-amsg-buttons .volume-slider .thumb {
+        .clx-amsg-controls .volume-slider .thumb {
             position: absolute;
             left: 0;
             height: var(--height);
             width: var(--width);
             background: var(--color-bg);
-            position: absolute;
             z-index: 1;
             display: block;
             top: calc((var(--thumb) - var(--height)) / 2);
         }
-        .clx-amsg-buttons .menu {
+        .clx-amsg-controls .menu {
             float: right;
             display: inline-block;
             position: relative;
@@ -226,13 +235,13 @@ let console = new XConsole("Audio Fixer");
             background: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Crect%20width%3D%2224%22%20height%3D%2224%22%20opacity%3D%22.15%22%2F%3E%3Cpath%20fill%3D%22%23828A99%22%20d%3D%22M5%2C14%20C3.8954305%2C14%203%2C13.1045695%203%2C12%20C3%2C10.8954305%203.8954305%2C10%205%2C10%20C6.1045695%2C10%207%2C10.8954305%207%2C12%20C7%2C13.1045695%206.1045695%2C14%205%2C14%20Z%20M12%2C14%20C10.8954305%2C14%2010%2C13.1045695%2010%2C12%20C10%2C10.8954305%2010.8954305%2C10%2012%2C10%20C13.1045695%2C10%2014%2C10.8954305%2014%2C12%20C14%2C13.1045695%2013.1045695%2C14%2012%2C14%20Z%20M19%2C14%20C17.8954305%2C14%2017%2C13.1045695%2017%2C12%20C17%2C10.8954305%2017.8954305%2C10%2019%2C10%20C20.1045695%2C10%2021%2C10.8954305%2021%2C12%20C21%2C13.1045695%2020.1045695%2C14%2019%2C14%20Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 50% no-repeat;
             opacity: .7;
         }
-        .clx-amsg-buttons .menu:hover{
+        .clx-amsg-controls .menu:hover{
             opacity: 1;
         }
-        .clx-amsg-buttons .menu:hover .eltt_arrow_back{
+        .clx-amsg-controls .menu:hover .eltt_arrow_back{
             pointer-events: all;
         }
-        .clx-amsg-buttons .menu:hover .eltt{
+        .clx-amsg-controls .menu:hover .eltt{
             opacity: 1;
             pointer-events: all;
             transform: translate(0) !important;
@@ -250,13 +259,14 @@ let console = new XConsole("Audio Fixer");
             document.body.removeChild($('.clx-version-message'));
         };
         document.body.appendChild($C(`
-<div class="clx-content-darkener" onclick="clx.audioFixer.closeVersionMessage()">&nbsp;</div>
-<div class="clx-version-message">
-     Теперь скрипт не будет перепрыгивать через сотню сообщений,<br>
-     чтобы проиграть следующее аудио...<br>
-     <br>
-     Спасибо, что летаете нашими авиалиниями!
-</div>`));
+            <div class="clx-content-darkener" onclick="clx.audioFixer.closeVersionMessage()">&nbsp;</div>
+            <div class="clx-version-message">
+                 Теперь скрипт не будет перепрыгивать через сотню сообщений,<br>
+                 чтобы проиграть следующее аудио...<br>
+                 <br>
+                 Спасибо, что летаете нашими авиалиниями!
+            </div>
+        `));
     }
 
     let old = window.AudioMessagePlayer;
@@ -306,46 +316,49 @@ let console = new XConsole("Audio Fixer");
                 }
             });
             if (element.nextSibling && element.nextSibling.classList.contains("vk_audio_msg_btns")) {
-                element.parentNode.removeChild(element.nextSibling);
+                $R(element.nextSibling);
             }
 
             element.appendChild($C(`
-<div class='clx-amsg-buttons'>
-    <span class="playback-rate"><span class='slower'>-</span><span class='speed'>${audio_el.playbackRate}</span><span class='faster'>+</span></span>
-    <div class="volume-slider${skipProcessing?"":" has-overdrive"}">
-        <span class="range">&nbsp;</span>
-        <span class="thumb">&nbsp;</span>
-    </div>
-    <a class="dl" href="${element.dataset.mp3}">mp3</a>
-    <a class="dl" href="${element.dataset.ogg}">ogg</a>
-    <div class="menu">
-        <div class="eltt eltt_arrow_size_normal eltt_align_center eltt_bottom"
-            style="display: block; left: -48px; top: 23px;">
-            <div class="eltt_arrow_back">
-                <div class="eltt_arrow"></div>
-            </div>
-            <div class="eltt_content">
-              <div class="audio_row__more_actions">
-                  <div class="audio_row__more_action">Share</div>
-                  <div class="audio_row__more_action">Open album</div>
-                  <div class="audio_row__more_action">Add to playlist</div>
-                  <div class="audio_row__more_action">Add to group</div>
-                  <div class="audio_row__more_action">Wiki</div>
-              </div>
+<div class="clx-amsg-controls">
+    <div class='player'>
+        <span class="playback-rate"><span class='slower'>-</span><span class='speed'>${audio_el.playbackRate}</span><span class='faster'>+</span></span>
+        <div class="volume-slider${skipProcessing?"":" has-overdrive"}">
+            <span class="range">&nbsp;</span>
+            <span class="thumb">&nbsp;</span>
+        </div>
+        <div class="menu">
+            <div class="eltt eltt_arrow_size_normal eltt_align_center eltt_bottom"
+                style="display: block; left: -48px; top: 23px;">
+                <div class="eltt_arrow_back">
+                    <div class="eltt_arrow"></div>
+                </div>
+                <div class="eltt_content">
+                  <div class="audio_row__more_actions">
+                      <div class="audio_row__more_action">Share</div>
+                      <div class="audio_row__more_action">Open album</div>
+                      <div class="audio_row__more_action">Add to playlist</div>
+                      <div class="audio_row__more_action">Add to group</div>
+                      <div class="audio_row__more_action">Wiki</div>
+                  </div>
+                </div>
             </div>
         </div>
     </div>
-    
+    <div class="dl-buttons">
+        <a class="dl" href="${element.dataset.mp3}">mp3</a>
+        <a class="dl" href="${element.dataset.ogg}">ogg</a>
+    </div>
 </div>
 `));
 
-            $('.clx-amsg-buttons .slower', element).addEventListener('click', checker((ev) => {
+            $('.clx-amsg-controls .slower', element).addEventListener('click', checker((ev) => {
                 AudioFixer.playbackRateChange(-1);
             }));
-            $('.clx-amsg-buttons .faster', element).addEventListener('click', checker((ev) => {
+            $('.clx-amsg-controls .faster', element).addEventListener('click', checker((ev) => {
                 AudioFixer.playbackRateChange(1);
             }));
-            $('.clx-amsg-buttons .speed', element).addEventListener('click', checker((ev) => {
+            $('.clx-amsg-controls .speed', element).addEventListener('click', checker((ev) => {
                 AudioFixer.playbackRateChange(0);
             }));
             $('.audio-msg-track--duration', element).addEventListener('click', checker((ev) => {
@@ -380,11 +393,11 @@ let console = new XConsole("Audio Fixer");
                 AudioFixer.volume_set(ev);
             })));
 
-            $('.clx-amsg-buttons .menu', element).addEventListener('mouseenter', (ev)=>{
+            $('.clx-amsg-controls .menu', element).addEventListener('mouseenter', (ev)=>{
                 let use_top = ev.clientY > window.innerHeight / 2;
-                let menu = $('.clx-amsg-buttons .menu .eltt', element);
+                let menu = $('.clx-amsg-controls .menu .eltt', element);
                 let menuArrow = $('.eltt_arrow_back', menu);
-                let menuButton = $('.clx-amsg-buttons .menu', element);
+                let menuButton = $('.clx-amsg-controls .menu', element);
                 menu.classList.remove(use_top?"eltt_bottom":'eltt_top');
                 menu.classList.add(use_top?"eltt_top":'eltt_bottom');
                 menu.style.top = (use_top ? -(menu.clientHeight + 5) : menuButton.clientHeight + 2) + 'px';
@@ -412,7 +425,7 @@ let console = new XConsole("Audio Fixer");
             }
         }
         AudioFixer.playbackRate = audio_el.playbackRate;
-        $('.clx-amsg-buttons .speed', AudioFixer.element).innerText = audio_el.playbackRate;
+        $('.clx-amsg-controls .speed', AudioFixer.element).innerText = audio_el.playbackRate;
     };
     AudioFixer.hint = function (ev) {
         let rect = $('.audio-msg-track--wave', this.element).getBoundingClientRect();
@@ -554,7 +567,7 @@ let console = new XConsole("Audio Fixer");
         audio_el.src = element.dataset.ogg;
         audio_el.playbackRate = this.playbackRate;
         let ctx = skipProcessing || AudioFixer.context;
-        $('.clx-amsg-buttons .speed', this.element).innerText = audio_el.playbackRate;
+        $('.clx-amsg-controls .speed', this.element).innerText = audio_el.playbackRate;
         this.element.classList.add("clx-player-attached");
         let rect = $('.volume-slider .range', this.element).getBoundingClientRect();
         let wrect = $('.volume-slider', this.element).getBoundingClientRect();
@@ -573,9 +586,11 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.pauseGlobalMedia = function () {
         console.warn("pauseGlobalMedia %cNOT IMPLEMENTED", "color:red;", arguments);
+        // console.trace();
     };
     AudioFixer.resumeGlobalMedia = function () {
         console.warn("resumeGlobalMedia %cNOT IMPLEMENTED", "color:red;", arguments);
+        // console.trace();
     };
 
     Object.defineProperty(AudioFixer, "reverseTime", {
