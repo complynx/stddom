@@ -595,8 +595,10 @@ let console = new XConsole("Audio Fixer");
     });
     AudioFixer.pause = function () {
         let el = this.element;
-        el.classList.remove('audio-msg-track_playing');
-        audio_el.pause();
+        if(el) {
+            el.classList.remove('audio-msg-track_playing');
+            audio_el.pause();
+        }
     };
     AudioFixer.play = function () {
         let el = this.element;
@@ -796,6 +798,22 @@ let console = new XConsole("Audio Fixer");
         } else if (window.stManager) {
             stManager.add('voice_message_player.js', () => {});
         }
+    }
+
+    if(window.ap){
+        ap.on(AudioFixer, AudioPlayer.EVENT_PLAY, ()=>{
+            delete ap.pausedByMsg;
+            AudioFixer.pause();
+        });
+    }else if(window.audio){
+        audio.onPlay(()=>{
+            delete audio.pausedByMsg;
+            AudioFixer.pause();
+        })
+    }
+    if(window.Notifier){
+        Notifier.addRecvClbk('audio_start', 'audio_msg', ()=>AudioFixer.pause());
+        Notifier.addRecvClbk('video_start', 'audio_msg', ()=>AudioFixer.pause());
     }
 
     Object.defineProperty(window, "AudioMessagePlayer", {
