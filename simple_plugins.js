@@ -7,11 +7,7 @@ let plugins = {};
 
 export {plugins};
 
-export function plugin_call() {
-    let args = Array.prototype.slice.call(arguments);
-    let plugin = args.shift();
-    let method = args.shift();
-
+export function plugin_call(plugin, method, ...args) {
     if (isString(plugin)) plugin = plugins[plugin];
 
     let field = plugin[method];
@@ -20,10 +16,9 @@ export function plugin_call() {
 }
 
 export function plugins_call() {
-    let args = Array.prototype.slice.call(arguments);
     let results = {};
     for (let plug_id in plugins) {
-        let res = plugin_call.apply(this, [plug_id].concat(args));
+        let res = plugin_call.call(this, plug_id, ...arguments);
         if (res !== undefined) results[plug_id] = res;
     }
     return results;
@@ -36,10 +31,9 @@ export function process_node(node, params) {
 }
 
 export function process_mutations(mutations) {
-    for (let i = 0; i < mutations.length; ++i) {
-        let nodes = mutations[i].addedNodes;
-        for (let j = 0; j < nodes.length; ++j) {
-            process_node(nodes[j]);
+    for (let i of mutations) {
+        if(i.addedNodes) for (let j of i.addedNodes) {
+            process_node(j);
         }
     }
 }

@@ -67,6 +67,7 @@ let console = new XConsole("Audio Fixer");
             width: 100%;
             position: absolute;
             top: 0;
+            left: 100%;
             z-index: 1;
             background: rgba(255, 255, 255, 0.5);
         }
@@ -342,10 +343,48 @@ let console = new XConsole("Audio Fixer");
             border-color: #5181b8;
             right: 5px;
         }
+        #clx-pause{
+            --size:3rem;
+            position: fixed;
+            display: block;
+            color: #fff;
+            text-align: center;
+            padding: 0;
+            font-size: 1.6em;
+            bottom: calc(var(--size)*-1);
+            right: 6rem;
+            height: var(--size);
+            width: var(--size);
+            border-radius: 50%;
+            background-color: #5181b8;
+            cursor: pointer;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            transition: .2s ease-out;
+        }
+        #clx-pause:after{
+            --pause-size: 0.3em;
+            content: "";
+            display: block;
+            position: absolute;
+            left: .65em;
+            top: .65em;
+            width:var(--pause-size);
+            height: calc(var(--pause-size)*3);
+            border-left: var(--pause-size) solid #fff;
+            border-right: var(--pause-size) solid #fff;
+        }
+        #clx-pause.visible{
+            transform: translateY(calc(var(--size)/-1.3));
+            transition: .2s ease-out;
+        }
+        
+    
         
     `);}
 
-    AudioFixer.version = 0.92;
+    AudioFixer.version = 0.93;
     console.log("Current version is", AudioFixer.version);
     if(parseFloat(localStorage.clxAudioFixerVersion) < AudioFixer.version){
         console.log(`Previous version was ${localStorage.clxAudioFixerVersion}. Opening version message.`);
@@ -361,8 +400,10 @@ let console = new XConsole("Audio Fixer");
                 <div class="contents">
                     Появились настройки, увеличилась стабильность.<br>
                     Теперь плеер остановится во время аудиосообщения.<br>
+                    А ещё мы добавили кнопку паузы, когда аудиосообщение<br>
+                    не на экране.<br>
                     <br>
-                    Спасибо, что летаете нашими авиалиниями!
+                    Спасибо, что плаваете поездами аэрофлота!
                 </div>
             </div>
         `));
@@ -417,8 +458,10 @@ let console = new XConsole("Audio Fixer");
                     return func.apply(this, arguments);
                 }
             });
-            if (element.nextSibling && element.nextSibling.classList.contains("vk_audio_msg_btns")) {
+            if (element.nextSibling && element.nextSibling.classList
+                && element.nextSibling.classList.contains("vk_audio_msg_btns")) {
                 $R(element.nextSibling);
+                vkopt.messages.processNode = ()=>{};
             }
 
             element.appendChild($C(`
@@ -531,28 +574,45 @@ let console = new XConsole("Audio Fixer");
         $('.audio-msg-track--duration', this.element).innerText = AudioFixer.reverseTime ?
             '-' + minSec(audio_el.duration - audio_el.currentTime) :
             minSec(audio_el.currentTime);
+
+        this.checkOutOfView();
+    };
+    AudioFixer.checkOutOfView = function(){
+        let container = this.element.closest('.ui_scroll_overflow');
+        let container_rect = container && container.getBoundingClientRect();
+        let rect = this.element.getBoundingClientRect();
+        let pb = this.element.closest('#page_body');
+        if(!audio_el.paused && !audio_el.ended &&
+            (pb == null || container_rect == null
+                || (rect.top > container_rect.bottom || rect.bottom < container_rect.top))){
+            this.staticPause.classList.add('visible');
+        }else{
+            this.staticPause.classList.remove('visible');
+        }
     };
     AudioFixer.endedListener = function () {
         let el = this.element;
         el.classList.remove('audio-msg-track_playing');
         $('.clx-amsg-progress', this.element).style.left = "100%";
         $('.audio-msg-track--duration', this.element).innerText = minSec(audio_el.duration);
+        this.staticPause.classList.remove('visible');
         AudioFixer.checkNext();
     };
     AudioFixer.checkNext = function () {
         if(this.autocontinue) {
             let chat = this.element.closest('.im-page-chat-contain');
             let mesg = this.element.closest('.im-mess');
-            let input = $('.im-page--chat-input');
-            let inp_rect = input && input.getBoundingClientRect();
-            let voice_messages = $A(`.im-mess-stack .im-mess${this.skipOutgoing?":not(.im-mess_out):not(.im_out)":""} .audio-msg-track`, chat);
+            let container = this.element.closest('.ui_scroll_overflow');
+            let container_rect = container && container.getBoundingClientRect();
+            let voice_messages = chat && $A(`.im-mess-stack .im-mess${this.skipOutgoing?":not(.im-mess_out):not(.im_out)":""} .audio-msg-track`, chat);
+            if(voice_messages)
             for (let i = 0; i < voice_messages.length - 1; ++i)
                 if (voice_messages[i] === this.element) {
                     let vm = voice_messages[i + 1];
                     let mesg_n = vm.closest('.im-mess');
                     let mesg_rect = mesg_n.getBoundingClientRect();
                     if (Math.abs(parseInt(mesg_n.dataset.ts) - parseInt(mesg.dataset.ts)) < stop_playing_ts) {
-                        if(!this.stopOutOfScreen || mesg_rect.top < inp_rect.top) {
+                        if(!this.stopOutOfScreen || mesg_rect.top < container_rect.bottom) {
                             this.togglePlay(vm);
                             return;
                         }
@@ -597,6 +657,7 @@ let console = new XConsole("Audio Fixer");
         let el = this.element;
         if(el) {
             el.classList.remove('audio-msg-track_playing');
+            this.staticPause.classList.remove('visible');
             audio_el.pause();
         }
     };
@@ -704,7 +765,7 @@ let console = new XConsole("Audio Fixer");
                     <span class='speed'>${AudioFixer.playbackRate}</span>
                     <span class='faster'>+</span>
                 </span>
-                <div class="volume-slider${skipProcessing?"":" has-overdrive"}">
+                <div class="volume-slider${skipProcessing ? "" : " has-overdrive"}">
                     <span class="range">&nbsp;</span>
                     <span class="thumb">&nbsp;</span>
                 </div>
@@ -718,16 +779,16 @@ let console = new XConsole("Audio Fixer");
                         <div class="eltt_content">
                             <div class="audio_row__more_actions">
                                 <span>
-                                    <input type="checkbox" id="${player_id}_autocontinue"${AudioFixer.autocontinue?" checked":""}>
+                                    <input type="checkbox" id="${player_id}_autocontinue"${AudioFixer.autocontinue ? " checked" : ""}>
                                     <label for="${player_id}_autocontinue" title="Автоматически воспроизводить следующее аудиосообщение">Воспроизводить следующее</label>
                                     <span class="checkbox-open">
-                                        <input type="checkbox" id="${player_id}_ap_skip_out"${AudioFixer.skipOutgoing?" checked":""}>
+                                        <input type="checkbox" id="${player_id}_ap_skip_out"${AudioFixer.skipOutgoing ? " checked" : ""}>
                                         <label for="${player_id}_ap_skip_out" title="Пропускать отправленные вами сообшения">Пропускать исходящие</label>
-                                        <input type="checkbox" id="${player_id}_ap_stop_overflow"${AudioFixer.stopOutOfScreen?" checked":""}>
+                                        <input type="checkbox" id="${player_id}_ap_stop_overflow"${AudioFixer.stopOutOfScreen ? " checked" : ""}>
                                         <label for="${player_id}_ap_stop_overflow" title="Останавливаться, если следующее аудиосообщение за пределами экрана">Не выходить за экран</label>
                                     </span>
                                 </span>
-                                <input type="checkbox" id="${player_id}_ap_stop_media"${AudioFixer.stopOtherMedia?" checked":""}>
+                                <input type="checkbox" id="${player_id}_ap_stop_media"${AudioFixer.stopOtherMedia ? " checked" : ""}>
                                 <label for="${player_id}_ap_stop_media" title="Останавливать видео или аудио, если оно проигрывалось, во время воспроизведения аудиосообщения">Приостанавливать медиа</label>
                             </div>
                         </div>
@@ -737,10 +798,18 @@ let console = new XConsole("Audio Fixer");
         `);
         pc = AudioFixer.playerControls = pc.querySelector('.player');
 
-        $(`#${player_id}_autocontinue`, pc).addEventListener('change', (ev)=>{AudioFixer.autocontinue = !!ev.target.checked;});
-        $(`#${player_id}_ap_skip_out`, pc).addEventListener('change', (ev)=>{AudioFixer.skipOutgoing = !!ev.target.checked;});
-        $(`#${player_id}_ap_stop_overflow`, pc).addEventListener('change', (ev)=>{AudioFixer.stopOutOfScreen = !!ev.target.checked;});
-        $(`#${player_id}_ap_stop_media`, pc).addEventListener('change', (ev)=>{AudioFixer.stopOtherMedia = !!ev.target.checked;});
+        $(`#${player_id}_autocontinue`, pc).addEventListener('change', (ev) => {
+            AudioFixer.autocontinue = !!ev.target.checked;
+        });
+        $(`#${player_id}_ap_skip_out`, pc).addEventListener('change', (ev) => {
+            AudioFixer.skipOutgoing = !!ev.target.checked;
+        });
+        $(`#${player_id}_ap_stop_overflow`, pc).addEventListener('change', (ev) => {
+            AudioFixer.stopOutOfScreen = !!ev.target.checked;
+        });
+        $(`#${player_id}_ap_stop_media`, pc).addEventListener('change', (ev) => {
+            AudioFixer.stopOtherMedia = !!ev.target.checked;
+        });
 
         AudioFixer.playbackRateDownButton = $('.slower', pc);
         AudioFixer.playbackRateDownButton.addEventListener('click', stopper((ev) => {
@@ -767,7 +836,7 @@ let console = new XConsole("Audio Fixer");
         })));
         AudioFixer.volumeSliderHint = $('.clx-vol-hint', pc);
         let hintToggle = function (ev) {
-            AudioFixer.volumeSliderHint.classList[ev.type === 'mouseleave'?"remove":'add']('visible');
+            AudioFixer.volumeSliderHint.classList[ev.type === 'mouseleave' ? "remove" : 'add']('visible');
         };
         AudioFixer.volumeSlider.addEventListener('mouseenter', hintToggle);
         AudioFixer.volumeSlider.addEventListener('mouseleave', hintToggle);
@@ -775,18 +844,25 @@ let console = new XConsole("Audio Fixer");
         AudioFixer.menuButton = $('.menu', pc);
         AudioFixer.menuWrapper = $('.menu .eltt', pc);
 
-        AudioFixer.menuButton.addEventListener('mouseenter', (ev)=>{
+        AudioFixer.menuButton.addEventListener('mouseenter', (ev) => {
             let use_top = ev.clientY > window.innerHeight / 2;
             let menu = AudioFixer.menuWrapper;
             let menuArrow = $('.eltt_arrow_back', menu);
-            menu.classList.remove(use_top?"eltt_bottom":'eltt_top');
-            menu.classList.add(use_top?"eltt_top":'eltt_bottom');
+            menu.classList.remove(use_top ? "eltt_bottom" : 'eltt_top');
+            menu.classList.add(use_top ? "eltt_top" : 'eltt_bottom');
             menu.style.top = (use_top ? -(menu.clientHeight + 5) : AudioFixer.menuButton.clientHeight + 2) + 'px';
-            menu.style.left = -(menu.clientWidth - AudioFixer.menuButton.clientWidth)/2 + 'px';
-            menuArrow.style.left = (menu.clientWidth - menuArrow.offsetWidth)/2 + 'px';
+            menu.style.left = -(menu.clientWidth - AudioFixer.menuButton.clientWidth) / 2 + 'px';
+            menuArrow.style.left = (menu.clientWidth - menuArrow.offsetWidth) / 2 + 'px';
         });
 
         AudioFixer.setVolumeSliderPosition();
+    }
+    {
+        document.body.appendChild($C(`<div id="clx-pause">&nbsp;</div>`));
+        AudioFixer.staticPause = $("#clx-pause");
+        AudioFixer.staticPause.addEventListener('click', ()=>{
+            AudioFixer.togglePlay(AudioFixer.element);
+        });
     }
 
     audio_el.addEventListener('timeupdate', AudioFixer.timeUpdateListener.bind(AudioFixer), {passive: true});
@@ -814,6 +890,26 @@ let console = new XConsole("Audio Fixer");
     if(window.Notifier){
         Notifier.addRecvClbk('audio_start', 'audio_msg', ()=>AudioFixer.pause());
         Notifier.addRecvClbk('video_start', 'audio_msg', ()=>AudioFixer.pause());
+    }
+
+    AudioFixer.process_node = function(node){
+        if(node.querySelectorAll)
+        for(let i of $A(".audio-msg-track", node)){
+            this.fixElement(i);
+        }
+    };
+    AudioFixer.page_observer = new MutationObserver((mutations)=>{
+        for (let i of mutations) {
+            if(i.addedNodes) for (let j of i.addedNodes) {
+                AudioFixer.process_node(j);
+            }
+        }
+    });
+    AudioFixer.page_observer.observe($('#page_body'), {childList: true, subtree: true});
+    AudioFixer.process_node($('#page_body'));
+    if(window.vkopt){
+        if(vkopt.messages)
+            vkopt.messages.processNode = ()=>{};
     }
 
     Object.defineProperty(window, "AudioMessagePlayer", {
