@@ -145,12 +145,16 @@ export function add_css(style, id) {
 }
 
 export function load_css(uri, id) {
-    let css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.type = 'text/css';
-    if (id) css.setAttribute('mark', id);
-    css.href = uri;
-    document.querySelector('head').appendChild(css);
+    return new Promise((resolve, reject)=> {
+        let css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.type = 'text/css';
+        element.onload = resolve;
+        element.onerror = reject;
+        if (id) css.setAttribute('mark', id);
+        css.href = uri;
+        document.querySelector('head').appendChild(css);
+    });
 }
 
 function start_editing(ev) {
