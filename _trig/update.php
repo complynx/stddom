@@ -1,3 +1,3 @@
 <?php
 
-echo system("./update.sh");
+echo system("sh ./update.sh");
