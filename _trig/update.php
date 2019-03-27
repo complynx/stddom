@@ -1,3 +1,3 @@
 <?php
 
-system("cd .. & git reset --hard origin/master & git pull origin master");
+echo system("cd .. & git reset --hard origin/master & git pull origin master");
