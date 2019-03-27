@@ -33,7 +33,7 @@ update showdown.js https://raw.githubusercontent.com/showdownjs/showdown/master/
 update_c medium-editor.js https://raw.githubusercontent.com/yabwe/medium-editor/master/dist/js/medium-editor.min.js
 update_c moment.js https://momentjs.com/downloads/moment.min.js
 
-
+mkdir moment
 upd="moment/moment-with-locales.js"
 echo Updating $upd
 echo "import {XConsole} from \"../console_enhancer.js\";let console=new XConsole(\"moment-loc\");" > $upd
