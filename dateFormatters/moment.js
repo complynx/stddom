@@ -1,4 +1,4 @@
-import {moment} from "../moment.js";
+import moment from "../moment.js";
 let formatter;
 formatter = (date, fstr)=>moment(date).format(fstr);
 moment.prototype.__format__ = moment.prototype.format;
