@@ -29,11 +29,13 @@ function update_c () {
 }
 
 update spark-md5.js https://raw.githubusercontent.com/satazor/js-spark-md5/master/spark-md5.min.js
-update showdown.js https://raw.githubusercontent.com/showdownjs/showdown/master/dist/showdown.js
+update showdown.js https://raw.githubusercontent.com/showdownjs/showdown/master/dist/showdown.min.js
+sed -i 's/this.document/window.document/g' showdown.js
+sed -i 's/this.window/window/g' showdown.js
 update_c medium-editor.js https://raw.githubusercontent.com/yabwe/medium-editor/master/dist/js/medium-editor.min.js
 update_c moment.js https://momentjs.com/downloads/moment.min.js
 
-mkdir moment
+mkdir -p moment
 upd="moment/moment-with-locales.js"
 echo Updating $upd
 echo "import {XConsole} from \"../console_enhancer.js\";let console=new XConsole(\"moment-loc\");" > $upd
