@@ -16,7 +16,7 @@ curl -s https://moment.github.io/luxon/es6/luxon.min.js -o ./luxon.js
 
 function update () {
     echo Updating $1 from $2
-    echo "let exports={},module={exports:{}};" >> $1
+    echo "let exports={},module={exports:{}};" > $1
     curl -s $2 >> $1
     echo "let def_export=module.exports; export default def_exports;" >> $1
 }
