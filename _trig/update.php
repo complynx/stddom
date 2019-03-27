@@ -1,3 +1,3 @@
+<pre>
 <?php
-
-passthru("sh ./update.sh");
+passthru("bash ./update.sh 2>&1");
