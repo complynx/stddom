@@ -29,7 +29,7 @@ function update_c () {
 }
 
 update spark-md5.js https://raw.githubusercontent.com/satazor/js-spark-md5/master/spark-md5.min.js
-update showdown.js https://raw.githubusercontent.com/showdownjs/showdown/master/dist/showdown.min.js
+update showdown.js https://raw.githubusercontent.com/showdownjs/showdown/master/dist/showdown.js
 update_c medium-editor.js https://raw.githubusercontent.com/yabwe/medium-editor/master/dist/js/medium-editor.min.js
 update_c moment.js https://momentjs.com/downloads/moment.min.js
 
