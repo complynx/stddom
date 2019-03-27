@@ -1,3 +1,3 @@
 <?php
 
-echo system("sh ./update.sh");
+passthru("sh ./update.sh");
