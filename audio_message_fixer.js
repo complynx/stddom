@@ -31,6 +31,7 @@ let console = new XConsole("Audio Fixer");
     saveable('skipOutgoing', true);
     saveable('stopOutOfScreen', true);
     saveable('stopOtherMedia', true);
+    saveable('playNew', false);
 
     let $ = (s, e = document) => e.querySelector(s);
     let $A = (s, e = document) => e.querySelectorAll(s);
@@ -379,12 +380,20 @@ let console = new XConsole("Audio Fixer");
             transform: translateY(calc(var(--size)/-1.3));
             transition: .2s ease-out;
         }
-        
-    
-        
+        #clx-pause.stop:after{
+            background: #fff;
+        }
+        #clx-pause.play:after{
+            width: 0;
+            height: 0;
+            border-left: calc(var(--pause-size)*.87) solid #fff;
+            border-top: calc(var(--pause-size)/2) solid transparent;
+            border-bottom: calc(var(--pause-size)/2) solid transparent;
+            border-right: 0 none transparent;
+        }
     `);}
 
-    AudioFixer.version = 0.93;
+    AudioFixer.version = 0.94;
     console.log("Current version is", AudioFixer.version);
     if(parseFloat(localStorage.clxAudioFixerVersion) < AudioFixer.version){
         console.log(`Previous version was ${localStorage.clxAudioFixerVersion}. Opening version message.`);
@@ -401,7 +410,8 @@ let console = new XConsole("Audio Fixer");
                     Появились настройки, увеличилась стабильность.<br>
                     Теперь плеер остановится во время аудиосообщения.<br>
                     А ещё мы добавили кнопку паузы, когда аудиосообщение<br>
-                    не на экране.<br>
+                    не на экране;<br>
+                    и режим автоматического воспроизведения новых сообщений.<br>
                     <br>
                     Спасибо, что плаваете поездами аэрофлота!
                 </div>
@@ -598,61 +608,79 @@ let console = new XConsole("Audio Fixer");
         this.staticPause.classList.remove('visible');
         AudioFixer.checkNext();
     };
-    AudioFixer.checkNext = function () {
-        if(this.autocontinue) {
-            let chat = this.element.closest('.im-page-chat-contain');
-            let mesg = this.element.closest('.im-mess');
-            let container = this.element.closest('.ui_scroll_overflow');
-            let container_rect = container && container.getBoundingClientRect();
-            let voice_messages = chat && $A(`.im-mess-stack .im-mess${this.skipOutgoing?":not(.im-mess_out):not(.im_out)":""} .audio-msg-track`, chat);
-            if(voice_messages)
-            for (let i = 0; i < voice_messages.length - 1; ++i)
-                if (voice_messages[i] === this.element) {
-                    let vm = voice_messages[i + 1];
-                    let mesg_n = vm.closest('.im-mess');
-                    let mesg_rect = mesg_n.getBoundingClientRect();
-                    if (Math.abs(parseInt(mesg_n.dataset.ts) - parseInt(mesg.dataset.ts)) < stop_playing_ts) {
-                        if(!this.stopOutOfScreen || mesg_rect.top < container_rect.bottom) {
-                            this.togglePlay(vm);
-                            return;
+    {
+        AudioFixer.element_ts = Date.now() / 1000.;
+        AudioFixer.checkNext = function () {
+            if (this.autocontinue) {
+                let chat = this.element ? this.element.closest('.im-page-chat-contain') : $('.im-page-chat-contain');
+                // let mesg = this.element.closest('.im-mess');
+                let container = chat && chat.closest('.ui_scroll_overflow');
+                let container_rect = container && container.getBoundingClientRect();
+                let voice_messages = chat && $A(`.im-mess-stack .im-mess${this.skipOutgoing ? ":not(.im-mess_out):not(.im_out)" : ""} .audio-msg-track`, chat);
+                if (voice_messages)
+                    for (let vm of voice_messages) {
+                        let mesg_n = vm.closest('.im-mess');
+                        if(parseInt(mesg_n.dataset.ts) > this.element_ts) {
+                            let mesg_rect = mesg_n.getBoundingClientRect();
+                            // if (Math.abs(parseInt(mesg_n.dataset.ts) - parseInt(mesg.dataset.ts)) < stop_playing_ts)
+                            if (!this.stopOutOfScreen || mesg_rect.top < container_rect.bottom) {
+                                this.togglePlay(vm);
+                                return;
+                            }
+                            break;
                         }
                     }
-                    break;
-                }
-        }
-        this.resumeGlobalMedia();
-    };
-    let ctx = null;
-    Object.defineProperty(AudioFixer, "context", {
-        configurable:true, enumerable:true,
-        get: function () {
-            if(!ctx){
-                ctx = new AudioContext();
-                AudioFixer.source = ctx.createMediaElementSource(audio_el);
-
-                // Create a compressor node
-                AudioFixer.compressor = ctx.createDynamicsCompressor();
-                AudioFixer.compressor.threshold.value = -50;
-                AudioFixer.compressor.knee.value = 40;
-                AudioFixer.compressor.ratio.value = 12;
-                AudioFixer.compressor.attack.value = 0;
-                AudioFixer.compressor.release.value = 0.25;
-                AudioFixer.source.connect(AudioFixer.compressor);
-
-                // Create a master volume node
-                AudioFixer.volume = ctx.createGain();
-                AudioFixer.volume.gain.value = audio_el.volume;
-                AudioFixer.compressor.connect(AudioFixer.volume);
-
-                // Output
-                AudioFixer.volume.connect(ctx.destination);
-
-                audio_el.volume = 1;
-                AudioFixer.setVolumeSliderPosition();
+            } else if (this.autocontinue) {
+                let voice_messages = $(`.im-mess-stack .im-mess${this.skipOutgoing ? ":not(.im-mess_out):not(.im_out)" : ""} .audio-msg-track`);
+                if (voice_messages)
+                    for (let i of voice_messages) {
+                        let mesg_n = i.closest('.im-mess');
+                        if(parseInt(mesg_n.dataset.ts) > start) {
+                            let mesg_rect = mesg_n.getBoundingClientRect();
+                            // if (Math.abs(parseInt(mesg_n.dataset.ts) - parseInt(mesg.dataset.ts)) < stop_playing_ts)
+                            if (!this.stopOutOfScreen || mesg_rect.top < container_rect.bottom) {
+                                this.togglePlay(i);
+                                return;
+                            }
+                        }
+                    }
             }
-            return ctx;
-        }
-    });
+            this.resumeGlobalMedia();
+        };
+    }
+    {
+        let ctx = null;
+        Object.defineProperty(AudioFixer, "context", {
+            configurable: true, enumerable: true,
+            get: function () {
+                if (!ctx) {
+                    ctx = new AudioContext();
+                    AudioFixer.source = ctx.createMediaElementSource(audio_el);
+
+                    // Create a compressor node
+                    AudioFixer.compressor = ctx.createDynamicsCompressor();
+                    AudioFixer.compressor.threshold.value = -50;
+                    AudioFixer.compressor.knee.value = 40;
+                    AudioFixer.compressor.ratio.value = 12;
+                    AudioFixer.compressor.attack.value = 0;
+                    AudioFixer.compressor.release.value = 0.25;
+                    AudioFixer.source.connect(AudioFixer.compressor);
+
+                    // Create a master volume node
+                    AudioFixer.volume = ctx.createGain();
+                    AudioFixer.volume.gain.value = audio_el.volume;
+                    AudioFixer.compressor.connect(AudioFixer.volume);
+
+                    // Output
+                    AudioFixer.volume.connect(ctx.destination);
+
+                    audio_el.volume = 1;
+                    AudioFixer.setVolumeSliderPosition();
+                }
+                return ctx;
+            }
+        });
+    }
     AudioFixer.pause = function () {
         let el = this.element;
         if(el) {
@@ -666,7 +694,7 @@ let console = new XConsole("Audio Fixer");
         el.classList.add('audio-msg-track_playing');
         audio_el.play();
     };
-    AudioFixer.togglePlay = function (element, event) {
+    AudioFixer.togglePlay = function (element = this.element, event) {
         if (event) {
             event.stopPropagation();
             event.preventDefault();
@@ -690,6 +718,7 @@ let console = new XConsole("Audio Fixer");
     };
     AudioFixer.attachPlayer = function (element) {
         this.element = element;
+        this.element_ts = parseInt(this.element.closest('.im-mess').dataset.ts);
         audio_el.src = element.dataset.ogg;
         audio_el.playbackRate = this.playbackRate;
         let ctx = skipProcessing || AudioFixer.context;
@@ -786,6 +815,8 @@ let console = new XConsole("Audio Fixer");
                                         <label for="${player_id}_ap_skip_out" title="Пропускать отправленные вами сообшения">Пропускать исходящие</label>
                                         <input type="checkbox" id="${player_id}_ap_stop_overflow"${AudioFixer.stopOutOfScreen ? " checked" : ""}>
                                         <label for="${player_id}_ap_stop_overflow" title="Останавливаться, если следующее аудиосообщение за пределами экрана">Не выходить за экран</label>
+                                        <input type="checkbox" id="${player_id}_ap_play_new"${AudioFixer.playNew ? " checked" : ""}>
+                                        <label for="${player_id}_ap_play_new" title="Воспроизводить новые аудиосообщения, согласно настройкам (в пределах или за пределами экрана)">Воспроизводить новые</label>
                                     </span>
                                 </span>
                                 <input type="checkbox" id="${player_id}_ap_stop_media"${AudioFixer.stopOtherMedia ? " checked" : ""}>
@@ -809,6 +840,9 @@ let console = new XConsole("Audio Fixer");
         });
         $(`#${player_id}_ap_stop_media`, pc).addEventListener('change', (ev) => {
             AudioFixer.stopOtherMedia = !!ev.target.checked;
+        });
+        $(`#${player_id}_ap_play_new`, pc).addEventListener('change', (ev) => {
+            AudioFixer.playNew = !!ev.target.checked;
         });
 
         AudioFixer.playbackRateDownButton = $('.slower', pc);
@@ -892,24 +926,27 @@ let console = new XConsole("Audio Fixer");
         Notifier.addRecvClbk('video_start', 'audio_msg', ()=>AudioFixer.pause());
     }
 
-    AudioFixer.process_node = function(node){
-        if(node.querySelectorAll)
-        for(let i of $A(".audio-msg-track", node)){
-            this.fixElement(i);
-        }
-    };
-    AudioFixer.page_observer = new MutationObserver((mutations)=>{
-        for (let i of mutations) {
-            if(i.addedNodes) for (let j of i.addedNodes) {
-                AudioFixer.process_node(j);
+    {
+        AudioFixer.process_node = function (node) {
+            if (node.querySelectorAll)
+                for (let i of $A(".audio-msg-track", node)) {
+                    this.fixElement(i);
+                }
+        };
+        AudioFixer.page_observer = new MutationObserver((mutations) => {
+            for (let i of mutations) {
+                if (i.addedNodes) for (let j of i.addedNodes) {
+                    AudioFixer.process_node(j);
+                }
             }
+            if(AudioFixer.playNew && (audio_el.paused || audio_el.ended)) AudioFixer.checkNext();
+        });
+        AudioFixer.page_observer.observe($('#page_body'), {childList: true, subtree: true});
+        AudioFixer.process_node($('#page_body'));
+        if (window.vkopt) {
+            if (vkopt.messages)
+                vkopt.messages.processNode = () => {};
         }
-    });
-    AudioFixer.page_observer.observe($('#page_body'), {childList: true, subtree: true});
-    AudioFixer.process_node($('#page_body'));
-    if(window.vkopt){
-        if(vkopt.messages)
-            vkopt.messages.processNode = ()=>{};
     }
 
     Object.defineProperty(window, "AudioMessagePlayer", {
