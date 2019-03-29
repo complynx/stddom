@@ -66,6 +66,14 @@ export function isOverflown(element) {
     return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
 }
 
+export function insertAt(parent, el, index) {
+    if(parent.childNodes.length > index){
+        return parent.insertBefore(el, parent.childNodes[index]);
+    }else{
+        return parent.appendChild(el);
+    }
+}
+
 export function fix_id(try_id, prefix) {
     try_id = String(try_id || '');
     if(!validate_id_regex.test(try_id)) try_id = '';
