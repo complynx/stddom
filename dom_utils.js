@@ -149,8 +149,8 @@ export function load_css(uri, id) {
         let css = document.createElement('link');
         css.rel = 'stylesheet';
         css.type = 'text/css';
-        element.onload = resolve;
-        element.onerror = reject;
+        css.onload = resolve;
+        css.onerror = reject;
         if (id) css.setAttribute('mark', id);
         css.href = uri;
         document.querySelector('head').appendChild(css);
