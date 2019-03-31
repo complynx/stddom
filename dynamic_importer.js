@@ -43,3 +43,4 @@ if(!window.dyn_import) {
 }
 
 if(!window['import'] || typeof window['import'] !== "function") window['import'] = dyn_import;
+else console.info("YAY, import()!");

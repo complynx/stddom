@@ -56,7 +56,7 @@ export function splitOnce(str, splitter) {
 export function parseQuery(query, tuples) {
     if(query[0] === '?') query = query.substring(1);
 
-    if(arguments.length < 2) tuples = False;
+    if(arguments.length < 2) tuples = false;
 
     let args = query.split('&');
 
@@ -107,7 +107,6 @@ export function escapeSpecialChars(str) {
               .replace(/[\r]/g, '\\r')
               .replace(/[\t]/g, '\\t');
 }
-
 
 let htmlEscapeTextConverter = document.createElement('div');
 export function escapeHtml(text) {
