@@ -66,6 +66,14 @@ export function isOverflown(element) {
     return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
 }
 
+export function insertAt(parent, el, index) {
+    if(parent.childNodes.length > index){
+        return parent.insertBefore(el, parent.childNodes[index]);
+    }else{
+        return parent.appendChild(el);
+    }
+}
+
 export function fix_id(try_id, prefix) {
     try_id = String(try_id || '');
     if(!validate_id_regex.test(try_id)) try_id = '';
@@ -145,12 +153,16 @@ export function add_css(style, id) {
 }
 
 export function load_css(uri, id) {
-    let css = document.createElement('link');
-    css.rel = 'stylesheet';
-    css.type = 'text/css';
-    if (id) css.setAttribute('mark', id);
-    css.href = uri;
-    document.querySelector('head').appendChild(css);
+    return new Promise((resolve, reject)=> {
+        let css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.type = 'text/css';
+        css.onload = resolve;
+        css.onerror = reject;
+        if (id) css.setAttribute('mark', id);
+        css.href = uri;
+        document.querySelector('head').appendChild(css);
+    });
 }
 
 function start_editing(ev) {
