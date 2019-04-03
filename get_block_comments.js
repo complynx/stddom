@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {isFunction} from "./type_checks.js";
 import {add_css as _add_css} from "./dom_utils.js";
 import {toArray} from "./utils.js";

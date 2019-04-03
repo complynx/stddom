@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {isFunction, isObject} from "./type_checks.js";
 import {toArray} from "./utils.js";
 import {generate_id} from "./mongo.js";

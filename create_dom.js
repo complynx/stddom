@@ -1,4 +1,8 @@
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 //from jQuery
 
 let xhtmlTagCloser = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,

@@ -1,5 +1,9 @@
 "use strict";
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {arrayLike} from "./type_checks.js";
 
 let own = ((own)=>(x, i)=>own.call(x, i))(Object.prototype.hasOwnProperty);

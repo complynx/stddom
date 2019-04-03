@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+##
+# Created by Complynx on 22.03.2019,
+# http://complynx.net
+# <complynx@yandex.ru> Daniel Drizhuk
+
 SOURCE="${BASH_SOURCE[0]}"
 while [[ -h "$SOURCE" ]]; do # resolve $SOURCE until the file is no longer a symlink
   DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"

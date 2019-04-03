@@ -1,4 +1,8 @@
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 let traceEntryRe = [
     { // Firefox 30+
         re:/^([^@]+)?@(.+):([0-9]+):([0-9]+)$/,

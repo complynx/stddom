@@ -1,5 +1,9 @@
 "use strict";
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 let toStr = ((ts)=>(o)=>ts.call(o))(Object.prototype.toString);
 
 export function isString(a) {

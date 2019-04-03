@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import{DateTime, Duration, Interval}from "../luxon.js";
 let formatter;
 formatter = (d,f)=>DateTime.fromJSDate(d).toFormat(f);

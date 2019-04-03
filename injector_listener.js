@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {XConsole} from "./console_enhancer.js";
 
 export function listen(func, name=func.name) {

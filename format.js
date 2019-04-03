@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {arrayLike, isObject, isFunction, isNumber, isInteger} from "./type_checks.js";
 import {toArray, own} from "./utils.js";
 import {XConsole} from "./console_enhancer.js";

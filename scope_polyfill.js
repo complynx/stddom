@@ -1,5 +1,9 @@
 "use strict";
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 (function() {
     if (!HTMLElement.prototype.querySelectorAll) {
         throw new Error('rootedQuerySelectorAll: This polyfill can only be used with browsers that support querySelectorAll');

@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import moment from "../moment.js";
 let formatter;
 formatter = (date, fstr)=>moment(date).format(fstr);

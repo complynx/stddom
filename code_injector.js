@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 import {isFunction} from "./type_checks.js";
 
 let injector = { // KiberInfinity's JS_InjToFunc_Lib v2.1

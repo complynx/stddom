@@ -1,4 +1,8 @@
-
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 export function age_from_birth_date(birth_date) {
     let cur_date = new Date();
     let bDay = new Date(cur_date.getFullYear(), birth_date.getMonth(), birth_date.getDate());

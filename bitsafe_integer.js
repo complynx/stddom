@@ -1,3 +1,8 @@
+/**
+ Created by Complynx on 22.03.2019,
+ http://complynx.net
+ <complynx@yandex.ru> Daniel Drizhuk
+ */
 // if there will be any browser support for more, this will be reviewed.
 
 const MAX_BITSAFE_INTEGER =  0x7fffffff;
