@@ -2,6 +2,16 @@
  Created by Complynx on 22.03.2019,
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
+ *
+ * This file presents mainly two functions: `format` and `vformat`. These act close to their analogies in Python,
+ * but there are some differences because of language constraints.
+ * Also, these functions present a full turing-compatible template language. For examples see `tests/format.js`,
+ * it contains many examples of what can `vformat` do.
+ *
+ * Simple call:
+ * ```js
+ * let str = vformat("{var} {} {2:.2g}", ["a", 2, 4.5], {var:"foo"});
+ * ```
  */
 import {arrayLike, isObject, isFunction, isNumber, isInteger} from "./type_checks.js";
 import {toArray, own} from "./utils.js";
@@ -115,6 +125,15 @@ export function setDateFormatter(func, tester) {
 import {formatter} from "./dateFormatters/default.js";
 setDateFormatter(formatter);
 
+/**
+ * formats value according the format string
+ * Uses `val.__format__(fstr)` if it exists and is a function. You can populate any value with this method to enable
+ * special formatting.
+ *
+ * @param {*}           val         value
+ * @param {string}      fstr        format string
+ * @returns {string}                formatted value
+ */
 export function format_value(val, fstr){
     if(isObject(val) && isFunction(val.__format__)){
         try {
@@ -199,6 +218,26 @@ export function format_value(val, fstr){
 
 let braces_re = /[{}]/;
 
+/**
+ * State machine formatter inspired by python `str.format()`
+ *
+ * Uses `format_value()` to format each entity.
+ * Also provides some functions such as `{!for}` or `{!ifeq}`.
+ * Look into tests of this module to see complete usage examples.
+ *
+ * Usages:
+ * ```js
+ * vformat("{} {}", [1,2]); //-> "1 2"
+ * vformat("{1} {0}", [1,2]); //-> "2 1"
+ * vformat("{a} {0}", [1,2], {a:"foo"}); //-> "foo 1"
+ * vformat("{a}", {a:"foo"}); //-> "foo"
+ * ```
+ *
+ * @param {String}      str     template to populate.
+ * @param {Array|*}     argc    optional array of positional arguments, if arrayLike, it will be cast to array.
+ * @param {Object=argc} argv    optional k-v args, if not provided and argc is object, uses argc instead.
+ * @returns {String}
+ */
 export function vformat(str, argc, argv) {
     let values = arrayLike(argc) ? toArray(argc) : [];
     let kvargs = isObject(argv) ? argv : isObject(argc) ? argc : {};
@@ -687,7 +726,24 @@ export function vformat(str, argc, argv) {
     return start;
 }
 
-export function format() {
+
+/**
+ * State machine formatter inspired by python `str.format()`
+ *
+ * `format(str, arg1, arg2, ...)` is the same as `vformat(str, [arg1, arg2, ...])`
+ * See more there.
+ *
+ * Usages:
+ * ```js
+ * format("{} {}", 1, 2); //-> "1 2"
+ * format("{1} {0}", 1, 2); //-> "2 1"
+ * ```
+ *
+ * @param {String}     string   template to populate.
+ * @param {*...}                arguments
+ * @returns {String}
+ */
+export function format(string) {
     let args = toArray(arguments);
     let str = args.shift();
     return vformat(str, args);
