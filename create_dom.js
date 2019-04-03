@@ -3,7 +3,9 @@
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
  */
-//from jQuery
+/**
+ * Reworked jQuery `$` function, that returns DocumentChunk instead of their special object.
+ */
 
 let xhtmlTagCloser = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi,
     tagName = /<([\w:\-]+)/,

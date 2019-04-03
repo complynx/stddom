@@ -6,6 +6,11 @@
 import {generate_id} from "./mongo.js";
 
 if(!window.dyn_import) {
+    /**
+     * ES6 `import()` backport.
+     * @param   {string}        url
+     * @returns {Promise<*>}    imported module contents
+     */
     window.dyn_import = function (url) {
         return new Promise((resolve, reject) => {
             if(!url || url === "") throw new Error("No URL specified");

@@ -3,6 +3,9 @@
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
  */
+/**
+ * Proper Error extender class
+ */
 class ExtendableError extends Error {
     constructor() {
         super(...arguments);

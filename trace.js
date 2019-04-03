@@ -24,6 +24,11 @@ let traceEntryRe = [
     }
 ];
 
+/**
+ * trace string parser
+ * @param   {string}    trace
+ * @returns {[*]}       parsed trace
+ */
 export function parseTrace(trace){
     trace = trace.split('\n');
     if(trace[0] === 'Error'){ // Chrome
@@ -46,6 +51,10 @@ export function parseTrace(trace){
     });
 }
 
+/**
+ * returns current callstack
+ * @returns {[*]}
+ */
 export function getTrace(){
     let e = new Error();
     let trace = parseTrace(e.stack);

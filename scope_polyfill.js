@@ -4,6 +4,10 @@
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
  */
+
+/**
+ * if browser doesn't support `:scope` selector
+ */
 (function() {
     if (!HTMLElement.prototype.querySelectorAll) {
         throw new Error('rootedQuerySelectorAll: This polyfill can only be used with browsers that support querySelectorAll');

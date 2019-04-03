@@ -6,12 +6,23 @@
  */
 import {arrayLike} from "./type_checks.js";
 
+/**
+ * hasOwnProperty caller
+ */
 let own = ((own)=>(x, i)=>own.call(x, i))(Object.prototype.hasOwnProperty);
 
+/**
+ * Capitalizes the first letter of a provided string
+ * @param   {string}    string
+ * @returns {string}    String
+ */
 export function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+/**
+ * Created when there was no reliable fetch. Maybe obsolete, but maybe used...
+ */
 export function post(url, data, callback, fail_callback, opts) {
     let r = new XMLHttpRequest();
     let q = data;
@@ -47,6 +58,12 @@ export function post(url, data, callback, fail_callback, opts) {
     return r;
 }
 
+/**
+ * Splits a string once with a delimiter
+ * @param   {string}    str         what to split
+ * @param   {string}    splitter    what to search
+ * @returns {[string, string]}      start and rest of the str
+ */
 export function splitOnce(str, splitter) {
     let ind = str.indexOf(splitter);
     if(ind < 0) return [str];
@@ -57,6 +74,12 @@ export function splitOnce(str, splitter) {
     return [start, rest];
 }
 
+/**
+ * Parses form-data format.
+ * @param   {string}    query
+ * @param   {boolean=}  tuples      return array of k-v pairs rather then an object
+ * @returns {*}
+ */
 export function parseQuery(query, tuples) {
     if(query[0] === '?') query = query.substring(1);
 
@@ -91,10 +114,19 @@ export function parseQuery(query, tuples) {
 }
 
 let escapeRegExpRe = /[-\/\\^$*+?.()|[\]{}]/g;
+
+/**
+ * Escapes regexp special characters.
+ * @param   {string} s
+ * @returns {string}
+ */
 export function escapeRegExp(s) {
     return s.replace(escapeRegExpRe, '\\$&');
 }
 
+/**
+ * wrap for post
+ */
 export function post_buffer(url, data, callback, fail_callback, opts) {
     if(!opts) opts = {};
     opts.raw = true;
@@ -102,6 +134,11 @@ export function post_buffer(url, data, callback, fail_callback, opts) {
     post(url, data, callback, fail_callback, opts);
 }
 
+/**
+ * C++ special characters escaper
+ * @param   {string} str
+ * @returns {string}
+ */
 export function escapeSpecialChars(str) {
     return str.replace(/[\\]/g, '\\\\')
               .replace(/["]/g,  '\\"')
@@ -113,18 +150,39 @@ export function escapeSpecialChars(str) {
 }
 
 let htmlEscapeTextConverter = document.createElement('div');
+
+/**
+ * Escapes HTML entities using browser engine
+ * @param   {string} text
+ * @returns {string}
+ */
 export function escapeHtml(text) {
     htmlEscapeTextConverter.innerText = text;
     return htmlEscapeTextConverter.innerHTML;
 }
 
+/**
+ * splits path string (unix) and returns basename
+ * @param   {string}    path
+ * @returns {string}
+ */
 export function basename(path) {
      return path.replace( /\\/g, '/' ).replace( /.*\//, '' );
 }
+/**
+ * splits path string (unix) and returns dirname
+ * @param   {string}    path
+ * @returns {string}
+ */
 export function dirname(path) {
      return path.replace( /\\/g, '/' ).replace( /\/[^\/]*$/, '' );
 }
 
+/**
+ * Returns array from item, wraps it if necessary.
+ * @param   {*}         item
+ * @returns {Array}
+ */
 export function toArray(item){
     if (item == null) return [];
     return (item instanceof Array) ? item : arrayLike(item) ? Array.prototype.slice.call(item) : [item];

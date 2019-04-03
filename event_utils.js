@@ -3,6 +3,11 @@
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
  */
+/**
+ * Wrapper that stops the event
+ * @param   {Function}          func
+ * @returns {function(*): *}    wrapped func
+ */
 let stopper = (func) => {
     return function (ev) {
         ev.stopPropagation();
@@ -11,6 +16,15 @@ let stopper = (func) => {
         return func.apply(this, arguments);
     };
 };
+/**
+ * Factory for mouse tracking functions where finishing events are tracked outside the element
+ * @param   {Function}      func        main callback
+ * @param   {Function=}     start       starter callback
+ * @param   {Function=}     finish      finisher callback
+ * @param   {string=}       mouseMove   trackable event name (default to mousemove)
+ * @param   {string=}       mouseUp     finisher event name (dafault to mouseup)
+ * @returns {function(*): *}            starter callback
+ */
 let mouseTracker = (func, start, finish, mouseMove="mousemove", mouseUp="mouseup")=>{
     return stopper(function (ev) {
         if(start && false === start.apply(this, arguments))

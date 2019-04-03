@@ -20,7 +20,17 @@ let zodiac_names = [
     "Ophiuchus"
 ];
 
-/**@return {number}*/
+/**
+ * returns zodiac number, where:
+ * Capricorn = 0
+ * Aquarius = 1
+ * ...
+ * Sagittarius = 11
+ *
+ * If `ophiuchus` is true, then 12 will be returned in it's dates
+ * @param   {Date}      birth_date
+ * @param   {boolean=}  ophiuchus       check for 13'th sign
+ * @return {number}*/
 export function Z(birth_date, ophiuchus) {
     let month = birth_date.getMonth() + 1;
     let day = birth_date.getDate();
@@ -30,6 +40,13 @@ export function Z(birth_date, ophiuchus) {
     return day > zodiac_cfg[month-1] ? (month) % 12 : (month - 1);
 }
 
+/**
+ * returns zodiac name regarding the date provided
+ * If `ophiuchus` is true, then it will be returned as well.
+ * @param   {Date}      birth_date
+ * @param   {boolean=}  ophiuchus       check for 13'th sign
+ * @returns {string}    zodiac sign
+ */
 export function zodiac(birth_date, ophiuchus) {
     return zodiac_names[Z(birth_date, ophiuchus)];
 }

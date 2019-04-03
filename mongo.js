@@ -4,6 +4,10 @@
  http://complynx.net
  <complynx@yandex.ru> Daniel Drizhuk
  */
+/**
+ * Generates Mongo-compliant ID
+ * @returns {string}
+ */
 export function generate_id() {
     let timestamp = (new Date().getTime() / 1000 | 0).toString(16);
     return timestamp + 'xxxxxxxxxxxxxxxx'.replace(/[x]/g, function() {
@@ -11,6 +15,11 @@ export function generate_id() {
     }).toLowerCase();
 }
 
+/**
+ * extracts string from MongoID
+ * @param   {*}         id  MongoID
+ * @returns {string}    ID representation
+ */
 export function id_to_string(id){
     if(typeof id === 'string')  return id;
 

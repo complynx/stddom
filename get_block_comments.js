@@ -8,6 +8,11 @@ import {add_css as _add_css} from "./dom_utils.js";
 import {toArray} from "./utils.js";
 import {injector} from "./code_injector.js";
 
+/**
+ * workaround for those cases where backquote strings are of no use.
+ * @param   {Function}  func    container of comments
+ * @returns {*}         parsed comment strings
+ */
 export function get_block_comments(func) { // извлекаем из кода функции содержимое блоковых комментариев
     let code = injector.parse(func).code;
     let obj_rx = /\*([a-z0-9_]+):\s*([\s\S]+?)\s*\*\//ig; // при нахождении /*comment_name: содержимое */ всё будет распарсенно в объект {comment_name: содержимое}
@@ -24,6 +29,9 @@ export function get_block_comments(func) { // извлекаем из кода �
     return comments;
 }
 
+/**
+ * adds extracted CSS from function comments.
+ */
 export function add_css() {
     let args = toArray(arguments);
     if(isFunction(args[0])){

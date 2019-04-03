@@ -12,6 +12,10 @@ function msStr(ms){
     return " ".repeat(Math.max(0, 9 - sec.length)) + sec;
 }
 
+/**
+ * Tired of boring plain logs? Try this to enhance your logger readability.
+ * Useful for modules.
+ */
 class XConsole{
     constructor(name = "XConsole", _console = console){
         this.module = name;

@@ -8,10 +8,21 @@ import {toArray} from "./utils.js";
 import {generate_id} from "./mongo.js";
 import {XConsole} from "./console_enhancer.js";
 
+/**
+ * Gets em size in pixels.
+ * @param   {Element}   el
+ * @returns {number}    em size
+ */
 let Em2Px = (el=document.body)=>parseFloat(window.getComputedStyle(el).fontSize);
 
 export {Em2Px};
 
+/**
+ * Returns offset measurements of the element regarding the provided parent.
+ * @param   {Element}   el          element to measure
+ * @param   {Element=}  parent      element of reference, or document.documentElement if not provided
+ * @returns {{left: number, top: number, height: number, width: number}}
+ */
 export function get_offset(el, parent){
     parent = parent || document.documentElement;
     let ret = {
@@ -26,6 +37,12 @@ export function get_offset(el, parent){
         ret.top += el.offsetTop;
         ret.left += el.offsetLeft;
         el = el.parentElement;
+        if(el === document.documentElement){
+            let p_offset = get_offset(parent);
+            ret.top -= p_offset.top;
+            ret.left -= p_offset.left;
+            return ret;
+        }
     }
 
     return ret;
@@ -33,6 +50,11 @@ export function get_offset(el, parent){
 
 let validate_id_regex = /^[-_a-z0-9]*$/gi;
 
+/**
+ * Generates a unique, yet unused DOM ID
+ * @param   {string=}   prefix
+ * @returns {string}    ID
+ */
 export function unique_id(prefix) {
     prefix = String(prefix || '');
     if(!validate_id_regex.test(prefix)) prefix = '';
@@ -43,12 +65,22 @@ export function unique_id(prefix) {
     return id;
 }
 
+/**
+ * Returns index of provided element in it's DOM
+ * @param   {Node}      el
+ * @returns {number}    index
+ */
 export function parentIndexOf(el) {
     if(!el.parentNode) return -1;
     return Array.prototype.indexOf.call(el.parentNode.childNodes, el);
 }
 
 let scrollbar_size = -1;
+
+/**
+ * Measures (on a first run) scrollbar size for this browser.
+ * @returns {number}
+ */
 export function getScrollbarSize() {
     if(scrollbar_size < 0) {
         let d = document.createElement('div');
@@ -67,10 +99,22 @@ export function getScrollbarSize() {
     return scrollbar_size;
 }
 
+/**
+ * Does this element have something outside it's box?
+ * @param   {Element}   element
+ * @returns {boolean}
+ */
 export function isOverflown(element) {
     return element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth;
 }
 
+/**
+ * Inserts element into DOM by index offset
+ * @param   {Element}   parent      where to insert
+ * @param   {Node}      el          what to insert
+ * @param   {number}    index       offset of insert
+ * @returns {Node}      el          inserted element or emptied DocumentChunk
+ */
 export function insertAt(parent, el, index) {
     if(parent.childNodes.length > index){
         return parent.insertBefore(el, parent.childNodes[index]);
@@ -79,6 +123,12 @@ export function insertAt(parent, el, index) {
     }
 }
 
+/**
+ * Validates DOM ID and ensures it's unique.
+ * @param   {string}    try_id      ID to validate
+ * @param   {string=}   prefix      prefix to generate, if the ID is bad
+ * @returns {string}    validated ID
+ */
 export function fix_id(try_id, prefix) {
     try_id = String(try_id || '');
     if(!validate_id_regex.test(try_id)) try_id = '';
@@ -87,6 +137,12 @@ export function fix_id(try_id, prefix) {
     return unique_id(prefix);
 }
 
+/**
+ * Gets an attribute contents from closest element having this attribute.
+ * @param   {Element}   el      where to start searching
+ * @param   {string}    attr    attribute to search
+ * @returns {string}    the value
+ */
 export function getFromClosest(el, attr) {
     return el.closest('[' + attr + ']').getAttribute(attr);
 }
@@ -147,8 +203,16 @@ let ThrottledEvent = (function(event_name, element) {
     }
 });
 
+/**
+ * something generates too many events? Ok, we have a solution.
+ */
 export {ThrottledEvent};
 
+/**
+ * Adds style rules to a document.
+ * @param   {string}    style   ruleset
+ * @param   {string=}   id      mark attribute
+ */
 export function add_css(style, id) {
     let styleElement = document.createElement("style");
     styleElement.type = "text/css";
@@ -157,6 +221,12 @@ export function add_css(style, id) {
     document.getElementsByTagName("head")[0].appendChild(styleElement);
 }
 
+/**
+ * Loads CSS from the given URL.
+ * @param   {string}        uri     URL of the stylesheet
+ * @param   {string=}       id      mark attribute
+ * @returns {Promise<*>}    Resolves when the stylesheet is loaded
+ */
 export function load_css(uri, id) {
     return new Promise((resolve, reject)=> {
         let css = document.createElement('link');

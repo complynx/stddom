@@ -44,12 +44,23 @@ let translit_dict = {
     'я':'ya'
 };
 
+/**
+ * Translates cyrillic alphabet characters to latin, using Russian translit rules.
+ * @param   {string}    cyr
+ * @returns {string}
+ */
 export function translit(cyr) {
     // diacritics first
     return cyr.replace(/(ё|й|[а-яё])/g, a => translit_dict[a]||a)
         .replace(/(Ё|Й|[А-ЯЁ])/g, a => capitalizeFirstLetter(translit_dict[a.toLowerCase()])||a);
 }
 
+/**
+ * Selects proper declention regarding provided number
+ * @param   {[string, string, string]}      titles      the declentions of word for one, two and five of something
+ * @param   {number}                        n           how many there are of something
+ * @returns {string}                        proper declention of something
+ */
 export function declenctionOfNumerics(titles, n) {
     n = Math.abs(n);
     if(Number.isInteger(n))

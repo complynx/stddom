@@ -6,6 +6,10 @@
  */
 let cache;
 
+/**
+ * if first event is mouse event, it's mouse, if first event is touch event, it's touch.
+ * @returns {Promise<string>}   "mouse"|"touch"
+ */
 export function detect() {
     return new Promise((resolve)=>{
         if(cache) return resolve(cache);

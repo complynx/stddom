@@ -5,6 +5,7 @@
  */
 import {isFunction} from "./type_checks.js";
 
+// This is a fork of a giant magic workaround.
 let injector = { // KiberInfinity's JS_InjToFunc_Lib v2.1
     FRegEx: /function[^(]*\(\s*([^)]*?)\s*\)[^{]*{([\s\S]+)}/i,
     DisableHistrory: false,
