@@ -29,54 +29,27 @@ export function capitalizeFirstLetter(string) {
  * @returns {Promise<Response | never>}
  */
 export function fetch_json(url, options={}) {
+    if(options && options.body && typeof options.body !== "string")
+        options.body = JSON.stringify(options.body);
+    return fetch_test(url, options).then(r=>r.json());
+}
+
+/**
+ * Fetching json->json
+ * Performed tests for 200 resp, and request method is POST if necessary.
+ * @param   {string}    url
+ * @param   {*=}        options
+ * @returns {Promise<Response | never>}
+ */
+export function fetch_test(url, options={}) {
     if(options){
-        if(options.body && typeof options.body !== "string")
-            options.body = JSON.stringify(options.body);
         if(!options.method && options.body)
             options.method = 'POST';
     }
     return fetch(url, options).then(r=>{
         if(!r.ok) throw new Error('HTTP error, status = ' + response.status);
-        return r.json();
+        return r;
     });
-}
-
-/**
- * Created when there was no reliable fetch. Maybe obsolete, but maybe used...
- */
-export function post(url, data, callback, fail_callback, opts) {
-    let r = new XMLHttpRequest();
-    let q = data;
-    if(typeof(q) !== 'string' && (!opts || !opts.raw)){
-        q = JSON.stringify(q);
-    }
-    r.onreadystatechange = function() {
-        if (r.readyState === 4) {
-            if (r.status >= 200 && r.status < 300) {
-                if (callback) callback(r.responseText, r);
-            } else { // e.g sleep
-                if (fail_callback) fail_callback(r.responseText, r);
-            }
-        }
-    };
-    try {
-        r.open('POST', url, true);
-    } catch(e) {
-        return false;
-    }
-    let ct_sent = false;
-    if(opts && opts.headers){
-        for(let i in opts.headers){
-            if(i.toLowerCase() === 'content-type') ct_sent = true;
-            r.setRequestHeader(i, opts.headers[i]);
-        }
-    }
-    if (!opts || !opts.urlonly) {
-        if(!ct_sent || !opts.no_content_type) r.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-        r.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-    }
-    r.send(q);
-    return r;
 }
 
 /**
@@ -143,16 +116,6 @@ let escapeRegExpRe = /[-\/\\^$*+?.()|[\]{}]/g;
  */
 export function escapeRegExp(s) {
     return s.replace(escapeRegExpRe, '\\$&');
-}
-
-/**
- * wrap for post
- */
-export function post_buffer(url, data, callback, fail_callback, opts) {
-    if(!opts) opts = {};
-    opts.raw = true;
-    opts.no_content_type = true;
-    post(url, data, callback, fail_callback, opts);
 }
 
 /**
