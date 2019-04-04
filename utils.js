@@ -21,6 +21,27 @@ export function capitalizeFirstLetter(string) {
 }
 
 /**
+ * Fetching json->json
+ * Performed tests for 200 resp, and ensured options.body is json, and request method is POST if necessary.
+ * And automatic resp JSON interpretation.
+ * @param   {string}    url
+ * @param   {*=}        options
+ * @returns {Promise<Response | never>}
+ */
+export function fetch_json(url, options={}) {
+    if(options){
+        if(options.body && typeof options.body !== "string")
+            options.body = JSON.stringify(options.body);
+        if(!options.method && options.body)
+            options.method = 'POST';
+    }
+    return fetch(url, options).then(r=>{
+        if(!r.ok) throw new Error('HTTP error, status = ' + response.status);
+        return r.json();
+    });
+}
+
+/**
  * Created when there was no reliable fetch. Maybe obsolete, but maybe used...
  */
 export function post(url, data, callback, fail_callback, opts) {
