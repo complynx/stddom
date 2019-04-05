@@ -4,6 +4,7 @@
  <complynx@yandex.ru> Daniel Drizhuk
  */
 import {getTrace} from "./trace.js";
+import {isFunction} from "./type_checks.js";
 
 let wrap = ["info", "log", "debug"];
 
@@ -23,6 +24,11 @@ class XConsole{
         let self = this;
         this.start = Date.now();
 
+        for(let i in this){
+            if(isFunction(this[i])){
+                this[i] = this[i].bind(this);
+            }
+        }
         for(let i of wrap){
             this[i] = function () {
                 return _console[i].apply(_console, XConsole.concatenatePrefix(self.prefix(), arguments));
