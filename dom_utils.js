@@ -101,7 +101,7 @@ export function getScrollbarSize() {
 
 /**
  * Does this element have something outside it's box?
- * @param   {Element}   element
+ * @param   {Node}      element
  * @returns {boolean}
  */
 export function isOverflown(element) {
@@ -110,7 +110,7 @@ export function isOverflown(element) {
 
 /**
  * Inserts element into DOM by index offset
- * @param   {Element}   parent      where to insert
+ * @param   {Node}      parent      where to insert
  * @param   {Node}      el          what to insert
  * @param   {number}    index       offset of insert
  * @returns {Node}      el          inserted element or emptied DocumentChunk
