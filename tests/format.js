@@ -343,24 +343,34 @@ function test_if(t) {
     test_vformat('{!if}foo{=else}bar{==}', [true], 'foo');
     test_vformat('{!if}foo{=else}bar{==}', [false], 'bar');
 
+    test_vformat('{!if}foo{==}noelse', [true], 'foonoelse');
+    test_vformat('{!if}foo{==}noelse', [false], 'noelse');
+
     test_vformat('{!if}-{~}-{==}', [true], '-true-');
     test_vformat('{!if}-{~}-{==}', [5], '-5-');
     test_vformat('{!if}-{~}-{==}', ['foo'], '-foo-');
 
+    test_vformat('{!ifeq(foo)}bar{=else}spam{==}', ['foo'], 'bar');
     test_vformat('{!ifeq("foo")}bar{=else}spam{==}', ['foo'], 'bar');
     test_vformat('{!ifeq(1)}bar{=else}spam{==}', [1], 'bar');
     test_vformat('{!ifeq(1)}bar{=else}spam{==}', ['1'], 'bar');
     test_vformat('{!ifeq(=1)}bar{=else}spam{==}', ['foo', 'foo'], 'bar');
 
-    test_vformat('{!typeof("string")}bar{=else}spam{==}', ['foo'], 'bar');
-    test_vformat('{!typeof("number")}bar{=else}spam{==}', ['foo'], 'spam');
-    test_vformat('{!typeof(1)}bar{=else}spam{==}', ['1'], 'spam');
-    test_vformat('{!typeof(=1)}bar{=else}spam{==}', [1, 'number'], 'bar');
-
+    test_vformat('{!ifeq(bar)}bar{=else}spam{==}', ['foo'], 'spam');
     test_vformat('{!ifeq("bar")}bar{=else}spam{==}', ['foo'], 'spam');
     test_vformat('{!ifeq(5)}bar{=else}spam{==}', [1], 'spam');
     test_vformat('{!ifeq(5)}bar{=else}spam{==}', ['1'], 'spam');
     test_vformat('{!ifeq(=1)}bar{=else}spam{==}', [1, 'foo'], 'spam');
+
+    test_vformat('{!typeof("string")}bar{=else}spam{==}', ['foo'], 'bar');
+    test_vformat('{!typeof(string)}bar{=else}spam{==}', ['foo'], 'bar');
+    test_vformat('{!typeof(=1)}bar{=else}spam{==}', [1, 'number'], 'bar');
+    test_vformat('{!typeof(number)}bar{=else}spam{==}', ['foo'], 'spam');
+    test_vformat('{!typeof(1)}bar{=else}spam{==}', ['1'], 'spam');
+
+    test_vformat('{!ifseq(=1)}bar{=else}spam{==}', [1, 1], 'bar');
+    test_vformat('{!ifseq(=1)}bar{=else}spam{==}', ['foo', 'foo'], 'bar');
+    test_vformat('{!ifseq(=1)}bar{=else}spam{==}', ['1', 1], 'spam');
 }
 
 function test_closure(t) {

@@ -311,6 +311,9 @@ export function vformat(str, argc, argv) {
         'ifeq'(type, params, rest){
             return functions['if'](type, [params[0] == params[1]], rest);
         },
+        'ifseq'(type, params, rest){
+            return functions['if'](type, [params[0] === params[1]], rest);
+        },
         'ifgt'(type, params, rest){
             return functions['if'](type, [params[0] > params[1]], rest);
         },
