@@ -17,7 +17,7 @@ cd "$DIR"/..
 echo Updating outsource modules...
 
 echo Updating luxon
-curl -s https://moment.github.io/luxon/es6/luxon.min.js -o ./luxon.js
+curl -s https://moment.github.io/luxon/es6/luxon.js -o ./luxon.js
 
 init_exports="let exports={},module={exports:{}};"
 def_export="let def_export=module.exports; export default def_export;"
