@@ -172,4 +172,15 @@ export function toArray(item){
     return (item instanceof Array) ? item : arrayLike(item) ? Array.prototype.slice.call(item) : [item];
 }
 
+/**
+ * Returns string that is cleaned from it's linked ancestors (see V8 string manipulation optimization)
+ * To save speed, with a link to ' ' + str, but not more.
+ * @param   {String} 	str
+ * @returns {String}	str without links
+ */
+export function cleanString(str){
+    if(str.length<13) return str;
+    return (' ' + str).slice(1);
+}
+
 export {own};
