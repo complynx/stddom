@@ -35,6 +35,8 @@ if(!window.dyn_import) {
 
             script.textContent = `
             import * as m from "${url}";
+            import default as d from "${url}";
+            m['default'] = d;
             clearTimeout(window.${tempGlobal}.timer);
             window.${tempGlobal}.resolve(m);
             `;
