@@ -112,10 +112,16 @@ export function isOverflown(element) {
  * Inserts element into DOM by index offset
  * @param   {Node}      parent      where to insert
  * @param   {Node}      el          what to insert
- * @param   {number}    index       offset of insert
+ * @param   {number}    index       offset of insert (negative numbers offset from the end)
  * @returns {Node}      el          inserted element or emptied DocumentChunk
  */
 export function insertAt(parent, el, index) {
+    if(index<0){
+        index = parent.childNodes.length - index;
+    }
+    if(index<0){
+        index = 0;
+    }
     if(parent.childNodes.length > index){
         return parent.insertBefore(el, parent.childNodes[index]);
     }else{
