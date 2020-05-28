@@ -40,6 +40,7 @@ function update_c () {
 
 update spark-md5 https://raw.githubusercontent.com/satazor/js-spark-md5/master/spark-md5.min.js
 update showdown https://raw.githubusercontent.com/showdownjs/showdown/master/dist/showdown.min.js
+update hls https://cdn.jsdelivr.net/npm/hls.js@latest
 sed -i 's/this.document/window.document/g' showdown.js
 sed -i 's/this.window/window/g' showdown.js
 update_c medium-editor https://raw.githubusercontent.com/yabwe/medium-editor/master/dist/js/medium-editor.min.js
