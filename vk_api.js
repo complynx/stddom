@@ -77,4 +77,5 @@ if(window.location.hash.length>1) {
     }
 }
 
+export {init, api_call, api_call_empty, settings};
 
