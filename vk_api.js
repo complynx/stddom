@@ -1,11 +1,13 @@
 import {storableObject} from "./storable_props.js";
 import {generate_id} from "./mongo.js";
 import {parseQuery} from "./utils.js";
+import {XConsole} from "./console_enhancer.js";
+let console = new XConsole("vk_api");
 
 let settings=storableObject({
     version: "5.110",
     token: false,
-    href: "",
+    hash: "",
     application: 0,
     user:0,
     permissions:0,
@@ -43,9 +45,14 @@ function init_redirect() {
     settings.state = generate_id();
     settings.token = false;
     settings.user = 0;
+    let redirector = window.location.href.split("#")[0];
+    if(window.location.hash.length > 1){
+        settings.hash = window.location.hash.substring(1);
+        window.location.hash = "";
+    }
     window.location.href = "https://oauth.vk.com/authorize?" + paramsQuery({
         client_id: settings.application,
-        redirect_uri: window.location.href,
+        redirect_uri: redirector,
         scope: settings.permissions,
         response_type: "token",
         state: settings.state,
@@ -59,6 +66,7 @@ function init() {
             api_call("account.getAppPermissions", {
                 user_id: settings.user
             }).then(r=>{
+                console.log("vk getAppPermissions returned", r);
                 if(r.response && r.response==settings.permissions){
                     resolve(true);
                 } else{
@@ -71,9 +79,16 @@ function init() {
 
 if(window.location.hash.length>1) {
     let q = parseQuery(window.location.hash.substr(1));
-    if(q.access_token && q.state && q.state==settings.state){
-        settings.user = q.user_id;
-        settings.token = q.access_token;
+    if(q.access_token && q.state){
+        console.log("vk access", q);
+        window.location.hash = "";
+        if(q.state==settings.state) {
+            settings.user = q.user_id;
+            settings.token = q.access_token;
+            if(settings.hash.length){
+                window.location.hash = "#" + settings.hash;
+            }
+        }
     }
 }
 
