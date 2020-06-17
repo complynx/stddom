@@ -22,17 +22,41 @@ function paramsQuery(params){
     return params_arr.join("&");
 }
 
+function jsonp(url, timeout=30000){
+    let cb_name="cb"+generate_id();
+    if(!window.vk_callbacks) {
+        window.vk_callbacks = {};
+    }
+    let scr = document.createElement("script");
+    let clearcb = ()=>{
+        document.head.removeChild(scr);
+        delete window.callbacks[cb_name];
+    }
+    let ret = new Promise((resolve,reject)=>{
+        let timer = setTimeout(()=>{
+            clearTimeout(timer);
+            clearcb();
+            reject({
+                error: "timeout"
+            });
+        }, timeout);
+        window.callbacks[cb_name] = (result)=>{
+            clearTimeout(timer);
+            clearcb();
+            resolve(result);
+        };
+    });
+    scr.src = url + "&callback=" + encodeURIComponent("vk_callbacks."+cb_name);
+    document.head.appendChild(scr);
+    return ret;
+}
+
 
 let api_url = 'https://api.vk.com/method/';
 async function api_call_empty(method, params) {
-    return fetch(api_url+method,{
-        method:"POST",
-        headers: {
-          // 'Content-Type': 'application/json'
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body:paramsQuery(params)
-    }).then(r=>r.json());
+    return jsonp(
+        api_url+method + "?" + paramsQuery(params)
+    );
 }
 async function api_call(method, params) {
     return api_call_empty(method, Object.assign({}, {
