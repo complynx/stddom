@@ -3,7 +3,10 @@ function storableProp(obj, name, path, def_val=undefined, storage=localStorage) 
     let current;
     let path_name = path + ":" + name;
     try{
-        current = JSON.parse(localStorage.getItem(path_name));
+        let item = localStorage.getItem(path_name)
+        if(typeof item === "string")
+            current = JSON.parse(item);
+        else current = def_val;
     }catch (e) {
         current = def_val;
     }
