@@ -30,7 +30,7 @@ function jsonp(url, timeout=30000){
     let scr = document.createElement("script");
     let clearcb = ()=>{
         document.head.removeChild(scr);
-        delete window.callbacks[cb_name];
+        delete window.vk_callbacks[cb_name];
     }
     let ret = new Promise((resolve,reject)=>{
         let timer = setTimeout(()=>{
@@ -40,7 +40,7 @@ function jsonp(url, timeout=30000){
                 error: "timeout"
             });
         }, timeout);
-        window.callbacks[cb_name] = (result)=>{
+        window.vk_callbacks[cb_name] = (result)=>{
             clearTimeout(timer);
             clearcb();
             resolve(result);
