@@ -25,7 +25,6 @@ function update_0 () {
 
 
 update_0 luxon https://moment.github.io/luxon/es6/luxon.js
-update_0 interact https://cdn.interactjs.io/v1.9.19/interactjs/index.js
 
 init_exports="let exports={},module={exports:{}};"
 def_export=$'\nlet def_export=module.exports; export default def_export;'
