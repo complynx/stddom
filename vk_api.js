@@ -16,6 +16,37 @@ let settings=storableObject({
     expiration: 0
 }, "clx:vk_api:settings");
 
+const rights={
+    notify: 1,
+    friends:1<<1,
+    photos: 1<<2,
+    audio:1<<3,
+    video:1<<4,
+    stories:1<<6,
+    pages:1<<7,
+    left_menu_link:1<<8,
+    status:1<<10,
+    notes:1<<11,
+    messages:1<<12,
+    wall:1<<13,
+    ads:1<<15,
+    offline:1<<16,
+    docs:1<<17,
+    groups:1<<18,
+    notifications:1<<19,
+    stats:1<<20,
+    email:1<<22,
+    market:1<<27
+};
+const rights_pages={
+    stories: 1,
+    photos: 1<<2,
+    app_widget:1<<6,
+    messages:1<<12,
+    docs:1<<17,
+    manage :1<<18
+};
+
 function paramsQuery(params){
     let params_arr = [];
     for(let i in params){
@@ -142,5 +173,5 @@ if(window.location.hash.length>1) {
     }
 }
 
-export {init, login, logout, api_call, api_call_empty, settings};
+export {init, login, logout, api_call, api_call_empty, settings, rights, rights_pages};
 
