@@ -3,6 +3,7 @@ import {generate_id} from "./mongo.js";
 import {parseQuery} from "./utils.js";
 import {XConsole} from "./console_enhancer.js";
 let console = new XConsole("vk_api");
+let login_error = null;
 
 let settings=storableObject({
     version: "5.110",
@@ -57,19 +58,26 @@ let api_url = 'https://api.vk.com/method/';
 async function api_call_empty(method, params) {
     return jsonp(
         api_url+method + "?" + paramsQuery(params)
-    );
+    ).then(r=>{
+        if(r.error){
+            throw r;
+        }
+        return r;
+    });
 }
 async function api_call(method, params) {
+    console.log("call: " + method);
     return api_call_empty(method, Object.assign({}, {
         access_token: settings.token,
         v: settings.version
     }, params))
 }
 
-function init_redirect() {
+function login() {
     settings.state = generate_id();
     settings.token = false;
     settings.user = 0;
+    settings.login_error = null;
     let redirector = window.location.href.split("#")[0];
     if(window.location.hash.length > 1){
         settings.hash = window.location.hash.substring(1);
@@ -87,18 +95,24 @@ function init_redirect() {
 
 function init(min_expiration = 3600000) {
     return new Promise((resolve, reject)=>{
-        if(settings.token && settings.user>0 && settings.expiration > Date.now() + min_expiration){
+        if(login_error){
+            reject(login_error);
+        }else if(settings.token && settings.user>0 && settings.expiration > Date.now() + min_expiration){
             api_call("account.getAppPermissions", {
                 user_id: settings.user
             }).then(r=>{
-                console.log("vk getAppPermissions returned", r);
+                console.log("vk getAppPermissions success");
                 if(r.response && r.response==settings.permissions){
-                    resolve({});
+                    resolve({
+                        expiration: Date.setTime(settings.expiration),
+                        user: settings.user,
+                        permissions: settings.permissions
+                    });
                 } else{
-                    init_redirect();
+                    login();
                 }
-            })
-        }else init_redirect();
+            }).catch(reject);
+        }else login();
     });
 }
 
@@ -109,12 +123,17 @@ function logout() {
 
 if(window.location.hash.length>1) {
     let q = parseQuery(window.location.hash.substr(1));
-    if(q.access_token && q.state){
-        console.log("vk access", q);
+    if(q.error && q.error_description){
+        window.location.hash = "";
+        login_error = q.error + ": " + q.error_description;
+        console.error("vk access error: " + login_error);
+    }else if(q.access_token && q.state){
+        console.log("vk access");
         window.location.hash = "";
         if(q.state==settings.state) {
             settings.user = q.user_id;
             settings.token = q.access_token;
+            settings.state = "";
             settings.expiration = Date.now() + parseInt(q.expires_in)*1000;
             if(settings.hash.length){
                 window.location.hash = "#" + settings.hash;
@@ -123,5 +142,5 @@ if(window.location.hash.length>1) {
     }
 }
 
-export {init, logout, api_call, api_call_empty, settings};
+export {init, login, logout, api_call, api_call_empty, settings};
 
