@@ -11,7 +11,8 @@ let settings=storableObject({
     application: 0,
     user:0,
     permissions:0,
-    state: ""
+    state: "",
+    expiration: 0
 }, "clx:vk_api:settings");
 
 function paramsQuery(params){
@@ -84,21 +85,26 @@ function init_redirect() {
 }
 
 
-function init() {
+function init(min_expiration = 3600000) {
     return new Promise((resolve, reject)=>{
-        if(settings.token && settings.user>0){
+        if(settings.token && settings.user>0 && settings.expiration > Date.now() + min_expiration){
             api_call("account.getAppPermissions", {
                 user_id: settings.user
             }).then(r=>{
                 console.log("vk getAppPermissions returned", r);
                 if(r.response && r.response==settings.permissions){
-                    resolve(true);
+                    resolve({});
                 } else{
                     init_redirect();
                 }
             })
         }else init_redirect();
     });
+}
+
+function logout() {
+    settings.token = false;
+    settings.user = 0;
 }
 
 if(window.location.hash.length>1) {
@@ -109,6 +115,7 @@ if(window.location.hash.length>1) {
         if(q.state==settings.state) {
             settings.user = q.user_id;
             settings.token = q.access_token;
+            settings.expiration = Date.now() + parseInt(q.expires_in)*1000;
             if(settings.hash.length){
                 window.location.hash = "#" + settings.hash;
             }
@@ -116,5 +123,5 @@ if(window.location.hash.length>1) {
     }
 }
 
-export {init, api_call, api_call_empty, settings};
+export {init, logout, api_call, api_call_empty, settings};
 
