@@ -135,7 +135,7 @@ function init(min_expiration = 3600000) {
                 console.log("vk getAppPermissions success");
                 if(r.response && r.response==settings.permissions){
                     resolve({
-                        expiration: Date.setTime(settings.expiration),
+                        expiration: (new Date()).setTime(settings.expiration),
                         user: settings.user,
                         permissions: settings.permissions
                     });
