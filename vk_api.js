@@ -43,13 +43,13 @@ function init_redirect() {
     settings.state = generate_id();
     settings.token = false;
     settings.user = 0;
-    window.location.href = "https://oauth.vk.com/authorize?" + paramsQuery(
+    window.location.href = "https://oauth.vk.com/authorize?" + paramsQuery({
         client_id: settings.application,
         redirect_uri: window.location.href,
         scope: settings.permissions,
         response_type: "token",
         state: settings.state,
-    );
+    });
 }
 
 
