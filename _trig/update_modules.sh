@@ -16,8 +16,16 @@ cd "$DIR"/..
 
 echo Updating outsource modules...
 
-echo Updating luxon
-curl -s https://moment.github.io/luxon/es6/luxon.js -o ./luxon.js
+
+function update_0 () {
+    file="$1"".js"
+    echo "Updating $1 from $2"
+    curl -s "$2" > "$file"
+}
+
+
+update_0 luxon https://moment.github.io/luxon/es6/luxon.js
+update_0 interact https://cdn.interactjs.io/v1.9.19/interactjs/index.js
 
 init_exports="let exports={},module={exports:{}};"
 def_export=$'\nlet def_export=module.exports; export default def_export;'
