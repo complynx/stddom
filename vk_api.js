@@ -54,7 +54,7 @@ function init_redirect() {
 
 
 function init() {
-    return Promise((resolve, reject)=>{
+    return new Promise((resolve, reject)=>{
         if(settings.token && settings.user>0){
             api_call("account.getAppPermissions", {
                 user_id: settings.user
