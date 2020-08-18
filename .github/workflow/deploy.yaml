@@ -1,0 +1,35 @@
+# This is a basic workflow that is manually triggered
+
+name: Modules deployment
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  push: # Sequence of patterns matched against refs/heads
+    branches:
+      # Push events on master branch
+      - master
+    # Sequence of patterns matched against refs/tags
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  deploy_servers:
+    name: Deploy modules
+    runs-on: server-main
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Copy source
+      run: |
+        source=`pwd`
+        cd $SERVER_CONFIGS_PATH
+        source ./env.sh
+        mkdir -p ./data/stddom && cd ./data/stddom
+        cp -rf -t ./ $source/*
+    - name: Update modules
+      run: |
+        cd $SERVER_CONFIGS_PATH/data/stddom
+        ./_trig/update_modules.sh
+
