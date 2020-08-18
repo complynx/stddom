@@ -31,5 +31,5 @@ jobs:
     - name: Update modules
       run: |
         cd $SERVER_CONFIGS_PATH/data/stddom
-        ./_trig/update_modules.sh
+        bash ./_trig/update_modules.sh
 
