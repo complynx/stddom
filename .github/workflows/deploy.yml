@@ -29,7 +29,9 @@ jobs:
         mkdir -p ./data/stddom_new
         echo "let date="\"$(date -u +"%d%m%Y_%H%M%S")\""; export {date};">version.js
         cp -rf -t ./data/stddom_new/ $source/*
+        mv -fT ./data/stddom ./data/stddom_old
         mv -fT ./data/stddom_new ./data/stddom
+        rm -rf ./data/stddom_old
     - name: Update modules
       run: |
         bash ./.github/workflows/update_modules.sh
