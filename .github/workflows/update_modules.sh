@@ -5,7 +5,7 @@
 # <complynx@yandex.ru> Daniel Drizhuk
 
 
-cd "$SERVER_CONFIGS_PATH"/data/stddom
+cd "$SERVER_CONFIGS_PATH"/data/stddom/latest
 
 echo Updating outsource modules...
 
