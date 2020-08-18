@@ -27,7 +27,7 @@ jobs:
         cd $SERVER_CONFIGS_PATH
         source ./env.sh
         mkdir -p ./data/stddom_new
-        echo "let date="\"$(date -u +"%d%m%Y_%H%M%S")\""; export {date};">version.js
+        echo "let date="\"$(date -u +"%d%m%Y_%H%M%S")\""; export {date};">./data/stddom_new/version.js
         cp -rf -t ./data/stddom_new/ $source/*
         mv -fT ./data/stddom ./data/stddom_old
         mv -fT ./data/stddom_new ./data/stddom
