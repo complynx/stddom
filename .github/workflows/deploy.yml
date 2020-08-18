@@ -30,6 +30,5 @@ jobs:
         cp -rf -t ./ $source/*
     - name: Update modules
       run: |
-        cd $SERVER_CONFIGS_PATH/data/stddom
-        bash ./_trig/update_modules.sh
+        bash ./.github/workflows/update_modules.sh
 
