@@ -26,8 +26,9 @@ jobs:
         source=`pwd`
         cd $SERVER_CONFIGS_PATH
         source ./env.sh
-        mkdir -p ./data/stddom && cd ./data/stddom
-        cp -rf -t ./ $source/*
+        mkdir -p ./data/stddom_new
+        cp -rf -t ./data/stddom_new/ $source/*
+        mv -f ./data/stddom_new ./data/stddom
     - name: Update modules
       run: |
         bash ./.github/workflows/update_modules.sh
