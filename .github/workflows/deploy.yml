@@ -29,7 +29,7 @@ jobs:
         mkdir -p ./data/stddom/new
         echo "let date="\"$(date -u +"%Y-%m-%dT%H:%M:%S")\""; export {date};">./data/stddom/new/version.js
         cp -rf -t ./data/stddom/new/ $source/*
-        mv -fT ./data/stddom/latest ./data/stddom/old
+        mv -fT ./data/stddom/latest ./data/stddom/old  || echo This is a first checkout
         mv -fT ./data/stddom/new ./data/stddom/latest
         rm -rf ./data/stddom/old
     - name: Update modules
