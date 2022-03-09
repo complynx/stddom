@@ -64,3 +64,11 @@ export function startAutoMon(currency, threshold) {
 
     startMon(parentToMon, ":scope > :first-child > :first-child > :nth-child(2) > :first-child > :first-child > :first-child", threshold);
 }
+
+
+(()=> {
+    if (!window.clx) window.clx = {};
+    if (clx.binance_p2p_helper) return console.warn("Already running...");
+
+    clx.binance_p2p_helper = startAutoMon;
+})();
