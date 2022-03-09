@@ -105,6 +105,25 @@ export class AudioNotificator extends NotificatorAbstract {
     }
 }
 
+export class OscNotificator extends NotificatorAbstract {
+    constructor({frequency=440, duration=.5}) {
+        super();
+        this.audio_context = new AudioContext;
+        this.frequency = frequency;
+        this.duration = duration;
+        this.oscillator = this.audio_context.createOscillator();
+        this.oscillator.connect(this.audio_context.destination);
+    }
+    async notify() {
+        this.oscillator.frequency.setValueAtTime(this.frequency, this.audio_context.currentTime);
+        this.oscillator.start();
+        this.oscillator.stop(this.audio_context.currentTime + this.duration);
+    }
+    async breakNotification() {
+        this.oscillator.stop();
+    }
+}
+
 export class FlashNotificator extends NotificatorAbstract {
     constructor({duration='2s', steps=6}) {
         super();
@@ -141,25 +160,24 @@ export class NotifyNotificator extends NotificatorAbstract {
 }
 
 export class Notificator extends NotificatorAbstract {
-    constructor({audio={}, flash={}}) {
+    constructor({audio_type="oscillator", audio_options, flash, notify}) {
         super();
-        this.audio = new AudioNotificator(audio);
-        this.flash = new FlashNotificator(flash);
-        this.notification = new NotifyNotificator();
+        this.notificators = [];
+        if(audio_type === "oscillator") {
+            this.notificators.push(new OscNotificator(audio_options ?? {}));
+        }
+        if(flash) {
+            this.notificators.push(new FlashNotificator(flash));
+        }
+        if(notify) {
+            this.notificators.push(new NotifyNotificator(notify));
+        }
     }
     async notify(text) {
-        return await Promise.all([
-            this.audio.notify(),
-            this.flash.notify(),
-            this.notification.notify(text)
-        ]);
+        return await Promise.all(this.notificators.map(el=>el.notify(text)));
     }
     async breakNotification() {
-        return await Promise.all([
-            this.audio.breakNotification(),
-            this.flash.breakNotification(),
-            this.notification.breakNotification()
-        ]);
+        return await Promise.all(this.notificators.map(el=>el.breakNotification()));
     }
 }
 

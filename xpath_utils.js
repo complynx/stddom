@@ -4,11 +4,8 @@
  <complynx@yandex.ru> Daniel Drizhuk
  */
 
-export function queryXPath(xpath, context, document = document) {
-    if(arguments.length < 2) {
-        context = document;
-    }
-    return document.evaluate(xpath, context,
+export function queryXPath(xpath, context, Document = document) {
+    return Document.evaluate(xpath, context ?? Document,
         null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
@@ -21,11 +18,8 @@ export function xPathToArray(iterator) {
     return ret;
 }
 
-export function queryXPathAll(xpath, context, document = document) {
-    if(arguments.length < 2) {
-        context = document;
-    }
-    return xPathToArray(document.evaluate(xpath, context,
+export function queryXPathAll(xpath, context, Document = document) {
+    return xPathToArray(Document.evaluate(xpath, context ?? Document,
         null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null));
 }
 
