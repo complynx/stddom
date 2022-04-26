@@ -49,3 +49,15 @@ export function isInteger(x) {
     return !isNaN(x) && !((x=parseFloat(x))%1) && x<=Number.MAX_SAFE_INTEGER && x>=Number.MIN_SAFE_INTEGER;
 }
 
+export function isArrayBufferView(obj) {
+    return obj?.buffer instanceof ArrayBuffer
+}
+
+export function isBlobPart(obj) {
+    return isString(obj) ||
+    (
+        obj instanceof ArrayBuffer ||
+        obj instanceof Blob ||
+        isArrayBufferView(obj)
+    );
+}
